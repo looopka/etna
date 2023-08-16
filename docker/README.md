@@ -2,11 +2,11 @@
 
 ## Available image names
 
+For versions > 2.2.0:
 - `ghcr.io/etna-team/etna/etna-cpu:<tag>`
 - `ghcr.io/etna-team/etna/etna-cuda-11.6.2:<tag>`
 
-On previous versions of the library there were also:
-- `ghcr.io/etna-team/etna/etna-cuda-10.2:<tag>`
+For versions <= 2.2.0 [see](https://github.com/tinkoff-ai/etna/blob/master/docker/README.md).
 
 ## Use cases
 
