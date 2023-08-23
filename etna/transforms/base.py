@@ -9,6 +9,7 @@ from typing import Union
 
 import pandas as pd
 from typing_extensions import Literal
+from deprecated import deprecated
 
 from etna.core import BaseMixin
 from etna.core import SaveMixin
@@ -17,6 +18,7 @@ from etna.distributions import BaseDistribution
 from etna.transforms.utils import match_target_quantiles
 
 
+@deprecated(version='3.0', reason="FutureMixin class is deprecated")
 class FutureMixin:
     """Mixin for transforms that can convert non-regressor column to a regressor one."""
 
