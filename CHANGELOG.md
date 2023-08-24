@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -
 -
 - Fix links from tinkoff-ai/etna to etna-team/etna ([#47](https://github.com/etna-team/etna/pull/47))
--
+- FutureMixin ([#58](https://github.com/etna-team/etna/pull/58))
 
 ### Removed
 -
