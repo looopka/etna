@@ -171,6 +171,31 @@ def example_df_(random_seed) -> pd.DataFrame:
 
 
 @pytest.fixture
+def example_df_with_nontarget_column(random_seed) -> pd.DataFrame:
+    periods = 100
+    df1 = pd.DataFrame({"timestamp": pd.date_range("2020-01-01", periods=periods)})
+    df1["segment"] = ["segment_1"] * periods
+    df1["target"] = np.arange(periods)
+    df1.loc[5, 'target'] = np.NaN
+    df1["target_no_change"] = df1["target"]
+    df1['non_target'] = np.random.uniform(0, 10, size=periods)
+    df1['non_target_no_change'] = df1['non_target']
+
+    df2 = pd.DataFrame({"timestamp": pd.date_range("2020-01-01", periods=periods)})
+    df2["segment"] = ["segment_2"] * periods
+    df2["target"] = np.random.uniform(-15, 5, size=periods)
+    df2.loc[10, 'target'] = np.NaN
+    df2["target_no_change"] = df2["target"]
+    df2['non_target'] = np.random.uniform(-10, 0, size=periods)
+    df2['non_target_no_change'] = df2['non_target']
+
+    df = pd.concat((df1, df2))
+    df = df.pivot(index="timestamp", columns="segment").reorder_levels([1, 0], axis=1).sort_index(axis=1)
+    df.columns.names = ["segment", "feature"]
+    return df
+
+
+@pytest.fixture
 def example_tsds(random_seed) -> TSDataset:
     periods = 100
     df1 = pd.DataFrame({"timestamp": pd.date_range("2020-01-01", periods=periods)})
@@ -421,7 +446,7 @@ def const_ts_anomal() -> TSDataset:
 @pytest.fixture
 def ts_diff_endings(example_reg_tsds):
     ts = deepcopy(example_reg_tsds)
-    ts.loc[ts.index[-5] :, pd.IndexSlice["segment_1", "target"]] = np.NAN
+    ts.loc[ts.index[-5]:, pd.IndexSlice["segment_1", "target"]] = np.NAN
     return ts
 
 
@@ -640,7 +665,7 @@ def market_level_constant_hierarchical_ts(market_level_constant_hierarchical_df,
 
 @pytest.fixture
 def market_level_constant_hierarchical_ts_w_exog(
-    market_level_constant_hierarchical_df, market_level_constant_hierarchical_df_exog, hierarchical_structure
+        market_level_constant_hierarchical_df, market_level_constant_hierarchical_df_exog, hierarchical_structure
 ):
     ts = TSDataset(
         df=market_level_constant_hierarchical_df,
@@ -664,7 +689,7 @@ def product_level_constant_hierarchical_ts(product_level_constant_hierarchical_d
 
 @pytest.fixture
 def product_level_constant_hierarchical_ts_with_exog(
-    product_level_constant_hierarchical_df, market_level_constant_hierarchical_df_exog, hierarchical_structure
+        product_level_constant_hierarchical_df, market_level_constant_hierarchical_df_exog, hierarchical_structure
 ):
     ts = TSDataset(
         df=product_level_constant_hierarchical_df,
