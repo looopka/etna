@@ -254,7 +254,13 @@ class PatchTSNet(DeepBaseNet):
 
 
 class PatchTSModel(DeepBaseModel):
-    """PatchTS model using PyTorch layers."""
+    """PatchTS model using PyTorch layers.
+
+    Note
+    ----
+    This model requires ``torch`` extension to be installed.
+    Read more about this at :ref:`installation page <installation>`.
+    """
 
     def __init__(
         self,
@@ -281,7 +287,7 @@ class PatchTSModel(DeepBaseModel):
 
         Parameters
         ----------
-         encoder_length:
+        encoder_length:
             encoder length
         decoder_length:
             decoder length

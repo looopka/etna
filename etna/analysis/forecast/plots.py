@@ -336,7 +336,7 @@ def plot_backtest_interactive(
 
     Returns
     -------
-    go.Figure:
+    :
         result of plotting
 
     Raises
@@ -616,7 +616,10 @@ def qq_plot(
 class PerFoldAggregation(str, Enum):
     """Enum for types of aggregation in a metric per-segment plot."""
 
+    #: Mean aggregation.
     mean = "mean"
+
+    #: Median aggregation.
     sum = "median"
 
     @classmethod
@@ -705,20 +708,15 @@ def plot_metric_per_segment(
 
 
 class MetricPlotType(str, Enum):
-    """Enum for types of plot in :py:func:`~etna.analysis.forecast.plots.metric_per_segment_distribution_plot`.
+    """Enum for types of plot in :py:func:`~etna.analysis.forecast.plots.metric_per_segment_distribution_plot`."""
 
-    Attributes
-    ----------
-    hist:
-        Histogram plot, :py:func:`seaborn.histplot` is used
-    box:
-        Boxplot, :py:func:`seaborn.boxplot` is used
-    violin:
-        Violin plot, :py:func:`seaborn.violinplot` is used
-    """
-
+    #: Histogram plot, :py:func:`seaborn.distributions.histplot` is used.
     hist = "hist"
+
+    #: Boxplot, :py:func:`seaborn.categorical.boxplot` is used.
     box = "box"
+
+    #: Violin plot, :py:func:`seaborn.categorical.violinplot` is used.
     violin = "violin"
 
     @classmethod
@@ -758,7 +756,7 @@ def metric_per_segment_distribution_plot(
         * If None, separate distributions for each fold will be drawn
 
         * If str, determines how to aggregate metrics over the folds if they aren't already aggregated
-        (see :py:class:`~etna.analysis.forecast.plots.PerFoldAggregation`)
+          (see :py:class:`~etna.analysis.forecast.plots.PerFoldAggregation`)
 
     plot_type:
         type of plot (see :py:class:`~etna.analysis.forecast.plots.MetricPlotType`)
@@ -850,7 +848,7 @@ def plot_forecast_decomposition(
     segments:
         segments to plot; if not given plot all the segments
     columns_num:
-        number of graphics columns; when mode=``per-component`` all plots will be in the single column
+        number of graphics columns; when ``mode="per-component"`` all plots will be in the single column
     figsize:
         size of the figure per subplot with one segment in inches
     show_grid:
