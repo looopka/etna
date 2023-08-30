@@ -31,7 +31,7 @@
   <a href="https://github.com/etna-team/etna/blob/master/CONTRIBUTING.md">Contribution Guide</a> |
   <a href="https://github.com/etna-team/etna/releases">Release Notes</a>
 </p>
-  
+
 ETNA is an easy-to-use time series forecasting framework. 
 It includes built in toolkits for time series preprocessing, feature generation, 
 a variety of predictive models with unified interface - from classic machine learning

@@ -24,6 +24,7 @@ from etna.transforms import HolidayTransform
 from etna.transforms import LabelEncoderTransform
 from etna.transforms import LagTransform
 from etna.transforms import LambdaTransform
+from etna.transforms import LimitTransform
 from etna.transforms import LinearTrendTransform
 from etna.transforms import LogTransform
 from etna.transforms import MADTransform
@@ -159,6 +160,7 @@ class TestInverseTransformTrainSubsetSegments:
                 ),
                 "regular_ts",
             ),
+            (LimitTransform(in_column="target"), "regular_ts"),
             (LogTransform(in_column="target", inplace=False), "positive_ts"),
             (LogTransform(in_column="target", inplace=True), "positive_ts"),
             (DifferencingTransform(in_column="target", inplace=False), "regular_ts"),
@@ -354,6 +356,8 @@ class TestInverseTransformFutureSubsetSegments:
                 ),
                 "ts_with_exog",
             ),
+            (LimitTransform(in_column="target"), "regular_ts"),
+            (LimitTransform(in_column="positive"), "ts_with_exog"),
             (LogTransform(in_column="target", inplace=False), "positive_ts"),
             (LogTransform(in_column="target", inplace=True), "positive_ts"),
             (LogTransform(in_column="positive", inplace=True), "ts_with_exog"),
@@ -569,6 +573,7 @@ class TestInverseTransformTrainNewSegments:
                 "regular_ts",
                 {"change": {"target"}},
             ),
+            (LimitTransform(in_column="target"), "regular_ts", {"change": {"target"}}),
             (LogTransform(in_column="target", inplace=False, out_column="res"), "positive_ts", {}),
             (LogTransform(in_column="target", inplace=True), "positive_ts", {"change": {"target"}}),
             (
@@ -866,6 +871,8 @@ class TestInverseTransformFutureNewSegments:
                 "ts_with_exog",
                 {"change": {"positive"}},
             ),
+            (LimitTransform(in_column="target"), "regular_ts", {"change": {"target"}}),
+            (LimitTransform(in_column="positive"), "ts_with_exog", {"change": {"positive"}}),
             (LogTransform(in_column="target", inplace=False, out_column="res"), "positive_ts", {}),
             (LogTransform(in_column="target", inplace=True), "positive_ts", {}),
             (LogTransform(in_column="positive", inplace=True), "ts_with_exog", {"change": {"positive"}}),
@@ -1302,6 +1309,7 @@ class TestInverseTransformFutureWithTarget:
                 "regular_ts",
                 {"change": {"target"}},
             ),
+            (LimitTransform(in_column="target"), "regular_ts", {"change": {"target"}}),
             (LogTransform(in_column="target", inplace=False, out_column="res"), "positive_ts", {}),
             (LogTransform(in_column="target", inplace=True), "positive_ts", {"change": {"target"}}),
             (
@@ -1684,6 +1692,8 @@ class TestInverseTransformFutureWithoutTarget:
                 "ts_with_exog",
                 {"change": {"positive"}},
             ),
+            (LimitTransform(in_column="target"), "regular_ts", {"change": {"target"}}),
+            (LimitTransform(in_column="positive"), "ts_with_exog", {"change": {"positive"}}),
             (LogTransform(in_column="target", inplace=False, out_column="res"), "positive_ts", {}),
             (LogTransform(in_column="target", inplace=True), "positive_ts", {}),
             (LogTransform(in_column="positive", inplace=True), "ts_with_exog", {"change": {"positive"}}),
