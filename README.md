@@ -23,7 +23,7 @@
   <a href="https://github.com/etna-team/etna/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/etna-team/etna.svg" /></a>
   <a href="https://github.com/etna-team/etna/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/etna-team/etna?style=social" /></a>
 </p>
-
+  
 <p align="center">
   <a href="https://etna.tinkoff.ru">Homepage</a> | 
   <a href="https://etna-docs.netlify.app/">Documentation</a> |
