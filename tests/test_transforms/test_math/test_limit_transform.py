@@ -42,8 +42,8 @@ def ts_check_limit_transform(random_seed) -> TSDataset:
         [0.6931471806099453, 1.0986122887014431, 1.3862943611448906, 1.6094379124541003]
     )
     df["target_transformed_4"] = np.array(
-         [-1.3862943610448906, -0.4054651080914978, 0.4054651080914977, 1.3862943610448906]
-     )
+        [-1.3862943610448906, -0.4054651080914978, 0.4054651080914977, 1.3862943610448906]
+    )
     df["non_target"] = np.array([5, 6, 7, 8])
     df["non_target_transformed_1"] = np.array([5, 6, 7, 8])
     df["non_target_transformed_2"] = np.array(
@@ -58,7 +58,9 @@ def ts_check_limit_transform(random_seed) -> TSDataset:
     return tsds
 
 
-@pytest.mark.parametrize("lower_bound,upper_bound,n_test", [(None, None, "1"), (None, 5, "2"), (-1, None, "3"), (0, 5, "4")])
+@pytest.mark.parametrize(
+    "lower_bound,upper_bound,n_test", [(None, None, "1"), (None, 5, "2"), (-1, None, "3"), (0, 5, "4")]
+)
 def test_fit_transform_target(ts_check_limit_transform: TSDataset, lower_bound: float, upper_bound: float, n_test: str):
     """Check forward scaled logit transform works correctly on target column"""
     preprocess = LimitTransform(in_column="target", lower_bound=lower_bound, upper_bound=upper_bound)
@@ -68,7 +70,9 @@ def test_fit_transform_target(ts_check_limit_transform: TSDataset, lower_bound: 
     )
 
 
-@pytest.mark.parametrize("lower_bound,upper_bound,n_test", [(None, None, "1"), (None, 9, "2"), (0, None, "3"), (3, 9, "4")])
+@pytest.mark.parametrize(
+    "lower_bound,upper_bound,n_test", [(None, None, "1"), (None, 9, "2"), (0, None, "3"), (3, 9, "4")]
+)
 def test_fit_transform_non_target(
     ts_check_limit_transform: TSDataset, lower_bound: float, upper_bound: float, n_test: str
 ):
@@ -91,16 +95,18 @@ def test_inverse_transform(ts_check_limit_transform: TSDataset, lower_bound: flo
     np.testing.assert_array_almost_equal(result["segment_1"]["target"], df_copy["segment_1"]["target"])
 
 
-@pytest.mark.parametrize("lower_bound,upper_bound,n_test", [(-10, 200, '1'), (-10, None, '2'), (-30, 50, '3'), (None, 50, '4'), (-5, 5, '5')])
+@pytest.mark.parametrize(
+    "lower_bound,upper_bound,n_test", [(-10, 200, "1"), (-10, None, "2"), (-30, 50, "3"), (None, 50, "4"), (-5, 5, "5")]
+)
 def test_fit_transform_values_out_of_borders(
     ts_check_pipeline_with_limit_transform: TSDataset, lower_bound: float, upper_bound: float, n_test: str
 ):
     """Check that Exception raises when there are values out of bounds"""
     transform = LimitTransform(in_column="target", lower_bound=lower_bound, upper_bound=upper_bound)
-    if n_test == '2':
+    if n_test == "2":
         left_border = lower_bound
         right_border = np.inf
-    elif n_test == '4':
+    elif n_test == "4":
         left_border = np.NINF
         right_border = upper_bound
     else:

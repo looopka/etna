@@ -1,4 +1,5 @@
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -23,7 +24,13 @@ class LimitTransform(ReversibleTransform):
     For more details visit https://datasciencestunt.com/time-series-forecasting-within-limits/ .
     """
 
-    def __init__(self, in_column: str, lower_bound: Optional[float] = None, upper_bound: Optional[float] = None, tol: float = 1e-10):
+    def __init__(
+        self,
+        in_column: str,
+        lower_bound: Optional[float] = None,
+        upper_bound: Optional[float] = None,
+        tol: float = 1e-10,
+    ):
         """
         Init LimitTransform.
 
@@ -81,10 +88,11 @@ class LimitTransform(ReversibleTransform):
         elif self.lower_bound is None and self.upper_bound is not None:
             transformed_features = np.log((self.upper_bound + self.tol - df))
         else:
-            transformed_features = np.log((df - self.lower_bound + self.tol) / (self.upper_bound + self.tol - df))
+            transformed_features = np.log((df - self.lower_bound + self.tol) / (self.upper_bound + self.tol - df))  # type: ignore
 
-        if (self.lower_bound is not None and (df < self.lower_bound).any().any()) \
-                or (self.upper_bound is not None and (df > self.upper_bound).any().any()):
+        if (self.lower_bound is not None and (df < self.lower_bound).any().any()) or (
+            self.upper_bound is not None and (df > self.upper_bound).any().any()
+        ):
             left_border = self.lower_bound
             right_border = self.upper_bound
             if self.lower_bound is None:
@@ -116,7 +124,7 @@ class LimitTransform(ReversibleTransform):
             transformed_features = self.upper_bound - np.exp(df) + self.tol
         else:
             exp_df = np.exp(df)
-            transformed_features = ((self.upper_bound - self.lower_bound) * exp_df) / (1 + exp_df) + self.lower_bound
+            transformed_features = ((self.upper_bound - self.lower_bound) * exp_df) / (1 + exp_df) + self.lower_bound  # type: ignore
         return transformed_features
 
     def get_regressors_info(self) -> List[str]:
