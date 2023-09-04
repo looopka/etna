@@ -112,6 +112,17 @@ def test_inverse_transform(ts_check_limit_transform: TSDataset, lower_bound: flo
     pd.testing.assert_frame_equal(df_copy, result)
 
 
+@pytest.mark.xfail
+def test_inverse_transform_fail(ts_check_limit_transform: TSDataset):
+    """Check that inverse_transform rolls back transform result"""
+    df_copy = ts_check_limit_transform.to_pandas()
+    preprocess = LimitTransform(in_column="target", lower_bound=None, upper_bound=20)
+    preprocess.fit_transform(ts=ts_check_limit_transform)
+    preprocess.inverse_transform(ts=ts_check_limit_transform)
+    result = ts_check_limit_transform.to_pandas()
+    pd.testing.assert_frame_equal(df_copy, result, atol=1e-15, rtol=1e-15)
+
+
 @pytest.mark.parametrize(
     "lower_bound,upper_bound,left_border,right_border",
     [(-10, 0, -10, 0), (10, 20, 10, 20), (0, 10, 0, 10), (None, 0, np.NINF, 0), (0, None, 0, np.inf)],

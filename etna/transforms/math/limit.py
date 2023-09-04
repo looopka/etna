@@ -8,26 +8,26 @@ from etna.transforms.base import ReversibleTransform
 
 
 class LimitTransform(ReversibleTransform):
-    """LimitTransform limits values of some feature between the borders.
+    """LimitTransform limits values of some feature between the borders (``lower_bound`` - ``toll``, ``upper_bound`` + ``toll``).
 
-    If both ``lower_bound`` and ``upper_bound`` are not set there is no transformation
+    * If both ``lower_bound`` and ``upper_bound`` are not set there is no transformation
 
-    If both ``lower_bound`` and ``upper_bound`` are set apply
+    * If both ``lower_bound`` and ``upper_bound`` are set apply
 
     .. math::
-        y = \\log(\\frac{x-a+tol}{b+tol-x}),
+        y = \\log(\\frac{x-(a-tol)}{(b+tol)-x}),
 
     where :math:`x` is feature, :math:`a` is lower bound, :math:`b` is upper bound, :math:`tol` is offset.
 
-    If ``lower_bound`` is set and ``upper_bound`` is not set apply
+    * If ``lower_bound`` is set and ``upper_bound`` is not set apply
 
     .. math::
-        y = \\log (x-a+tol)
+        y = \\log (x-(a-tol))
 
-    If ``lower_bound`` is not set and ``upper_bound`` is set apply
+    * If ``lower_bound`` is not set and ``upper_bound`` is set apply
 
     .. math::
-        y = \\log (b+tol-x)
+        y = \\log ((b+tol)-x)
 
     For more details visit https://datasciencestunt.com/time-series-forecasting-within-limits/ .
     """
@@ -63,8 +63,9 @@ class LimitTransform(ReversibleTransform):
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         self.tol = tol
-        self._lower_bound = self.lower_bound - self.tol if self.lower_bound is not None else None
-        self._upper_bound = self.upper_bound + self.tol if self.upper_bound is not None else None
+
+        self._lower_bound: Optional[float] = self.lower_bound - self.tol if self.lower_bound is not None else None
+        self._upper_bound: Optional[float] = self.upper_bound + self.tol if self.upper_bound is not None else None
 
     def _fit(self, df: pd.DataFrame):
         """Fit method does nothing and is kept for compatibility.
@@ -90,16 +91,6 @@ class LimitTransform(ReversibleTransform):
             transformed dataframe
 
         """
-        # TODO: https://github.com/etna-team/etna/issues/66
-        if self._lower_bound is None and self._upper_bound is None:
-            transformed_features = df
-        elif self._lower_bound is not None and self._upper_bound is None:
-            transformed_features = np.log(df - self._lower_bound)
-        elif self._lower_bound is None and self._upper_bound is not None:
-            transformed_features = np.log(self._upper_bound - df)
-        else:
-            transformed_features = np.log((df - self._lower_bound) / (self._upper_bound - df))
-
         if (self.lower_bound is not None and (df < self.lower_bound).any().any()) or (
             self.upper_bound is not None and (df > self.upper_bound).any().any()
         ):
@@ -110,6 +101,17 @@ class LimitTransform(ReversibleTransform):
             if self.upper_bound is None:
                 right_border = np.inf
             raise ValueError(f"Detected values out [{left_border}, {right_border}]")
+
+        # TODO: https://github.com/etna-team/etna/issues/66
+        if self._lower_bound is None and self._upper_bound is None:
+            transformed_features = df
+        elif self._lower_bound is not None and self._upper_bound is None:
+            transformed_features = np.log(df - self._lower_bound)
+        elif self._lower_bound is None and self._upper_bound is not None:
+            transformed_features = np.log(self._upper_bound - df)
+        else:
+            transformed_features = np.log((df - self._lower_bound) / (self._upper_bound - df))
+
         return transformed_features
 
     def _inverse_transform(self, df: pd.DataFrame) -> pd.DataFrame:
