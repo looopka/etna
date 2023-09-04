@@ -155,7 +155,7 @@ class AbstractPipeline(AbstractSaveable):
         Parameters
         ----------
         ts:
-            Dataset to forecast. If not given, dataset given during :py:meth:``fit`` is used.
+            Dataset to forecast. If not given, dataset given during :py:meth:`fit` is used.
         prediction_interval:
             If True returns prediction interval for forecast
         quantiles:
@@ -271,7 +271,7 @@ class AbstractPipeline(AbstractSaveable):
 
         Returns
         -------
-        metrics_df, forecast_df, fold_info_df: Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
+        metrics_df, forecast_df, fold_info_df:
             Metrics dataframe, forecast dataframe and dataframe with information about folds
         """
 
@@ -322,6 +322,14 @@ class BasePipeline(AbstractPipeline, BaseMixin):
     """Base class for pipeline."""
 
     def __init__(self, horizon: int):
+        """
+        Create instance of BasePipeline with given parameters.
+
+        Parameters
+        ----------
+        horizon:
+            Number of timestamps in the future for forecasting
+        """
         self._validate_horizon(horizon=horizon)
         self.horizon = horizon
         self.ts: Optional[TSDataset] = None
@@ -412,7 +420,7 @@ class BasePipeline(AbstractPipeline, BaseMixin):
         Parameters
         ----------
         ts:
-            Dataset to forecast. If not given, dataset given during :py:meth:``fit`` is used.
+            Dataset to forecast. If not given, dataset given during :py:meth:`fit` is used.
         prediction_interval:
             If True returns prediction interval for forecast
         quantiles:
@@ -942,7 +950,7 @@ class BasePipeline(AbstractPipeline, BaseMixin):
 
         Returns
         -------
-        metrics_df, forecast_df, fold_info_df: Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
+        metrics_df, forecast_df, fold_info_df:
             Metrics dataframe, forecast dataframe and dataframe with information about folds
 
         Raises

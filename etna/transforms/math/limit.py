@@ -9,17 +9,17 @@ from etna.transforms.base import ReversibleTransform
 
 class LimitTransform(ReversibleTransform):
     """LimitTransform limits values of some feature between the borders.
-    If both ``lower_bound`` and ``upper_bound`` are not set there are no transformation
+    If both ``lower_bound`` and ``upper_bound`` are not set there is no transformation
     If both ``lower_bound`` and ``upper_bound`` are set apply
     .. math::
-    y = \\log (\\frac{x-a}{b-x}),
-    where :math:`x` is feature, :math:`a` is lower bound, :math:`b` is upper bound.
+    y = \\log (\\frac{x-a+tol}{b+tol-x}),
+    where :math:`x` is feature, :math:`a` is lower bound, :math:`b` is upper bound, :math:`tol` is offset.
     If ``lower_bound`` is set and ``upper_bound`` is not set apply
     .. math::
-    y = \\log (x-a)
+    y = \\log (x-a+tol)
     If ``lower_bound`` is not set and ``upper_bound`` is set apply
     .. math::
-    y = \\log (b-x)
+    y = \\log (b+tol-x)
 
     For more details visit https://datasciencestunt.com/time-series-forecasting-within-limits/ .
     """
@@ -43,7 +43,7 @@ class LimitTransform(ReversibleTransform):
         upper_bound:
             upper bound for the value of the column, inclusive.
         tol:
-            offset used to calculate transformed values.
+            offset from the bounds used to calculate transformed values.
 
         Raises
         ------
@@ -55,6 +55,8 @@ class LimitTransform(ReversibleTransform):
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         self.tol = tol
+        self._lower_bound = self.lower_bound - self.tol if self.lower_bound is not None else None
+        self._upper_bound = self.upper_bound + self.tol if self.upper_bound is not None else None
 
     def _fit(self, df: pd.DataFrame):
         """Fit method does nothing and is kept for compatibility.
@@ -80,15 +82,15 @@ class LimitTransform(ReversibleTransform):
             transformed dataframe
 
         """
-        # TODO: fix precision
-        if self.lower_bound is None and self.upper_bound is None:
+        # TODO: https://github.com/etna-team/etna/issues/66
+        if self._lower_bound is None and self._upper_bound is None:
             transformed_features = df
-        elif self.lower_bound is not None and self.upper_bound is None:
-            transformed_features = np.log((df - self.lower_bound + self.tol))
-        elif self.lower_bound is None and self.upper_bound is not None:
-            transformed_features = np.log((self.upper_bound + self.tol - df))
+        elif self._lower_bound is not None and self._upper_bound is None:
+            transformed_features = np.log(df - self._lower_bound)
+        elif self._lower_bound is None and self._upper_bound is not None:
+            transformed_features = np.log(self._upper_bound - df)
         else:
-            transformed_features = np.log((df - self.lower_bound + self.tol) / (self.upper_bound + self.tol - df))  # type: ignore
+            transformed_features = np.log((df - self._lower_bound) / (self._upper_bound - df))
 
         if (self.lower_bound is not None and (df < self.lower_bound).any().any()) or (
             self.upper_bound is not None and (df > self.upper_bound).any().any()
@@ -115,16 +117,16 @@ class LimitTransform(ReversibleTransform):
         :
             transformed series
         """
-        # TODO: fix precision
-        if self.lower_bound is None and self.upper_bound is None:
+        # TODO: https://github.com/etna-team/etna/issues/66
+        if self._lower_bound is None and self._upper_bound is None:
             transformed_features = df
-        elif self.lower_bound is not None and self.upper_bound is None:
-            transformed_features = np.exp(df) + self.lower_bound - self.tol
-        elif self.lower_bound is None and self.upper_bound is not None:
-            transformed_features = self.upper_bound - np.exp(df) + self.tol
+        elif self._lower_bound is not None and self._upper_bound is None:
+            transformed_features = np.exp(df) + self._lower_bound
+        elif self._lower_bound is None and self._upper_bound is not None:
+            transformed_features = self._upper_bound - np.exp(df)
         else:
             exp_df = np.exp(df)
-            transformed_features = ((self.upper_bound - self.lower_bound) * exp_df) / (1 + exp_df) + self.lower_bound  # type: ignore
+            transformed_features = ((self._upper_bound - self._lower_bound) * exp_df) / (1 + exp_df) + self._lower_bound  # type: ignore
         return transformed_features
 
     def get_regressors_info(self) -> List[str]:

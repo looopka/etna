@@ -8,21 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 -
--
--
--
+- Add `quickstart` notebook, add `mechanics_of_forecasting` notebook ([#1343](https://github.com/tinkoff-ai/etna/pull/1343))
+- Add gallery of tutorials divided by level ([#46](https://github.com/etna-team/etna/pull/46))
+- Create documentation page with links to external resources ([#44](https://github.com/etna-team/etna/pull/44))
+- Add documentation page with glossary of terms ([#45](https://github.com/etna-team/etna/pull/45/))
+- Add publishing into s3 for the latest documentation version ([#50](https://github.com/etna-team/etna/pull/50))
+- Add publishing into s3 during release ([#53](https://github.com/etna-team/etna/pull/53))
+- Add multiversion switcher into documentation ([#55](https://github.com/etna-team/etna/pull/55))
+- Add error page into documentation ([#57](https://github.com/etna-team/etna/pull/57))
+- Add `LimitTransform` ([#63](https://github.com/etna-team/etna/pull/63))
 
 ### Changed
 -
 -
--
--
+- Add installation page and notes about extensions into documentation of public classes ([#1339](https://github.com/tinkoff-ai/etna/pull/1339))
+- Merge User Guide and API sections in documentation, limit classes to show in API section ([#1324](https://github.com/tinkoff-ai/etna/pull/1324))
+- Unify example notebooks, rerun example notebooks ([#1330](https://github.com/tinkoff-ai/etna/pull/1330))
+- Rework `get_started` notebook ([#1343](https://github.com/tinkoff-ai/etna/pull/1343))
+- Add missing classes from decomposition into API Reference, add modules into page titles in API Reference ([#61](https://github.com/etna-team/etna/pull/61))
 
 ### Fixed
 -
 -
 - Fix links from tinkoff-ai/etna to etna-team/etna ([#47](https://github.com/etna-team/etna/pull/47))
 - 
+- Rendering table of contents in notebooks ([#1343](https://github.com/tinkoff-ai/etna/pull/1343))
+- Fix formatting of docstrings, fix links from netlify to docs.etna.ai ([#62](https://github.com/etna-team/etna/pull/62))
 
 ### Removed
 - FutureMixin ([#58](https://github.com/etna-team/etna/pull/58))
