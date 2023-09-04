@@ -9,15 +9,23 @@ from etna.transforms.base import ReversibleTransform
 
 class LimitTransform(ReversibleTransform):
     """LimitTransform limits values of some feature between the borders.
+
     If both ``lower_bound`` and ``upper_bound`` are not set there is no transformation
+
     If both ``lower_bound`` and ``upper_bound`` are set apply
+
     .. math::
     y = \\log (\\frac{x-a+tol}{b+tol-x}),
+
     where :math:`x` is feature, :math:`a` is lower bound, :math:`b` is upper bound, :math:`tol` is offset.
+
     If ``lower_bound`` is set and ``upper_bound`` is not set apply
+
     .. math::
     y = \\log (x-a+tol)
+
     If ``lower_bound`` is not set and ``upper_bound`` is set apply
+
     .. math::
     y = \\log (b+tol-x)
 
