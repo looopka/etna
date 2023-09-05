@@ -8,7 +8,7 @@ from etna.transforms.base import ReversibleTransform
 
 
 class LimitTransform(ReversibleTransform):
-    """LimitTransform limits values of some feature between the borders (``lower_bound`` - ``toll``, ``upper_bound`` + ``toll``).
+    """LimitTransform limits values of some feature between the borders (``lower_bound`` - ``tol``, ``upper_bound`` + ``tol``).
 
     * If both ``lower_bound`` and ``upper_bound`` are not set there is no transformation
 
@@ -16,8 +16,6 @@ class LimitTransform(ReversibleTransform):
 
     .. math::
         y = \\log(\\frac{x-(a-tol)}{(b+tol)-x}),
-
-    where :math:`x` is feature, :math:`a` is lower bound, :math:`b` is upper bound, :math:`tol` is offset.
 
     * If ``lower_bound`` is set and ``upper_bound`` is not set apply
 
@@ -28,6 +26,8 @@ class LimitTransform(ReversibleTransform):
 
     .. math::
         y = \\log ((b+tol)-x)
+
+    where :math:`x` is feature, :math:`a` is lower bound, :math:`b` is upper bound, :math:`tol` is offset.
 
     For more details visit https://datasciencestunt.com/time-series-forecasting-within-limits/ .
     """

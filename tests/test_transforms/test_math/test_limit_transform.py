@@ -112,6 +112,7 @@ def test_inverse_transform(ts_check_limit_transform: TSDataset, lower_bound: flo
     pd.testing.assert_frame_equal(df_copy, result)
 
 
+# TODO: https://github.com/etna-team/etna/issues/66
 @pytest.mark.xfail
 def test_inverse_transform_fail(ts_check_limit_transform: TSDataset):
     """Check that inverse_transform rolls back transform result"""
