@@ -38,6 +38,7 @@ from etna.transforms import DifferencingTransform
 from etna.transforms import FilterFeaturesTransform
 from etna.transforms import LagTransform
 from etna.transforms import LogTransform
+from etna.transforms import ReversibleTransform
 from etna.transforms import TimeSeriesImputerTransform
 from tests.test_pipeline.utils import assert_pipeline_equals_loaded_original
 from tests.test_pipeline.utils import assert_pipeline_forecasts_given_ts
@@ -205,6 +206,36 @@ def test_forecast_with_intervals_other_model(base_forecast, model_class):
     )
 
 
+@pytest.mark.parametrize(
+    "model_class",
+    [PredictionIntervalContextIgnorantAbstractModel, PredictionIntervalContextRequiredAbstractModel],
+)
+def test_forecast_with_native_intervals_inverse_transformed(model_class):
+    ts = MagicMock(spec=TSDataset)
+    model = MagicMock(spec=model_class)
+    transform = MagicMock(spec=ReversibleTransform)
+
+    pipeline = Pipeline(model=model, transforms=[transform], horizon=5)
+    pipeline.fit(ts)
+    predictions = pipeline.forecast(prediction_interval=True, quantiles=(0.025, 0.975))
+
+    predictions.inverse_transform.assert_called()
+
+
+@patch("etna.pipeline.base.BasePipeline._forecast_prediction_interval")
+def test_forecast_with_backtest_estimated_intervals_inverse_transformed(forecast_intervals):
+    ts = MagicMock(spec=TSDataset)
+    model = MagicMock(spec=NonPredictionIntervalContextIgnorantAbstractModel)
+    transform = MagicMock(spec=ReversibleTransform)
+
+    pipeline = Pipeline(model=model, transforms=[transform], horizon=5)
+    pipeline.fit(ts)
+    predictions = pipeline.forecast(prediction_interval=True, quantiles=(0.025, 0.975))
+
+    forecast_intervals.assert_called()
+    predictions.inverse_transform.assert_called()
+
+
 def test_forecast_values(example_tsds):
     """Test that the forecast from the Pipeline generates correct values."""
     original_ts = deepcopy(example_tsds)
@@ -241,11 +272,11 @@ def test_forecast_prediction_interval_incorrect_parameters(
         _ = catboost_pipeline.forecast(quantiles=quantiles, n_folds=prediction_interval_cv)
 
 
-@pytest.mark.parametrize("model", (ProphetModel(), SARIMAXModel()))
+@pytest.mark.parametrize("model", (MovingAverageModel(), ProphetModel(), SARIMAXModel()))
 def test_forecast_prediction_interval_builtin(example_tsds, model):
     """Test that forecast method uses built-in prediction intervals for the listed models."""
     np.random.seed(1234)
-    pipeline = Pipeline(model=model, transforms=[], horizon=5)
+    pipeline = Pipeline(model=model, transforms=[AddConstTransform(in_column="target", value=1e6)], horizon=5)
     pipeline.fit(example_tsds)
     forecast_pipeline = pipeline.forecast(prediction_interval=True)
 
