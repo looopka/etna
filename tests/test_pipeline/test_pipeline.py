@@ -218,10 +218,15 @@ def test_forecast_inverse_transformed(model_class):
     ts = MagicMock(spec=TSDataset)
     model = MagicMock(spec=model_class)
     transform = MagicMock(spec=ReversibleTransform)
+    interval_method = MagicMock(side_effect=lambda *args, **kwargs: kwargs["predictions"])
 
     pipeline = Pipeline(model=model, transforms=[transform], horizon=5)
+
+    # mocking default interval estimation method
+    pipeline._forecast_prediction_interval = interval_method
+
     pipeline.fit(ts)
-    predictions = pipeline.forecast()
+    predictions = pipeline.forecast(prediction_interval=True, quantiles=(0.025, 0.975))
 
     predictions.inverse_transform.assert_called()
 
