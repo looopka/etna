@@ -1,13 +1,9 @@
 name: Build and push docker image from trunk
 
-#on:
-#  push:
-#    branches:
-#      - master
-
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
+    branches:
+      - master
 
 jobs:
   docker-build-and-push:
@@ -47,5 +43,5 @@ jobs:
           VERSION=latest
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
-#          docker tag image $IMAGE_ID:$VERSION
-#          docker push $IMAGE_ID:$VERSION
+          docker tag image $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
