@@ -35,7 +35,7 @@ jobs:
       - name: Build image
         run: |
           cd $( dirname ${{ matrix.dockerfile.path }})
-          sed -i '/etna\[all\]/d' requirements.txt
+          sed -i 's#etna\[all\]#etna[all] @ git+https://github.com/${{ github.repository }}.git@${{ github.sha }}#g' requirements.txt
           poetry export --without-hashes --format=requirements.txt >> requirements.txt
           cat requirements.txt
           docker build . --tag image
