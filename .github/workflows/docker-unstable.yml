@@ -10,7 +10,7 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  push:
+  docker-build-and-push:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -31,7 +31,7 @@ jobs:
           virtualenvs-in-project: true
       - name: Install dependencies
         run: |
-          poetry install -E "all" -vv
+          poetry install -E all -vv
       - name: Build image
         run: |
           cd $( dirname ${{ matrix.dockerfile.path }})

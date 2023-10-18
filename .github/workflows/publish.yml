@@ -6,7 +6,7 @@ on:
       - created
 
 jobs:
-  publish:
+  publish-package:
     runs-on: ubuntu-latest
     steps:
       - name: Dump GitHub context
