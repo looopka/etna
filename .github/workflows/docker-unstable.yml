@@ -36,9 +36,7 @@ jobs:
         run: |
           cd $( dirname ${{ matrix.dockerfile.path }})
           sed -i '/etna\[all\]/d' requirements.txt
-          poetry export --without-hashes --format=requirements.txt > poetry_requirements.txt
-          cat poetry_requirements.txt >> requirements.txt
-#          sed -i 's#etna\[all\]#etna[all] @ git+https://github.com/${{ github.repository }}.git@${{ github.sha }}#g' requirements.txt
+          poetry export --without-hashes --format=requirements.txt >> requirements.txt
           cat requirements.txt
           docker build . --tag image
       - name: Log into registry
