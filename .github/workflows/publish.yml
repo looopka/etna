@@ -100,9 +100,10 @@ jobs:
       - name: Build image
         run: |
           cd $( dirname ${{ matrix.dockerfile.path }})
+          sed -i '/jupyterlab/d' requirements.txt
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           sed -i "s#etna\[all\]#etna\[all\]==$VERSION#g" requirements.txt
-          poetry export --without-hashes --format=requirements.txt >> requirements.txt
+          poetry export -E "all jupyter" --without-hashes --format=requirements.txt >> requirements.txt
           cat requirements.txt
           docker build . --tag image
       - name: Log into registry
