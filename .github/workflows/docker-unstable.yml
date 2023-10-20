@@ -1,9 +1,16 @@
 name: Build and push docker image from trunk
 
+#on:
+#  push:
+#    branches:
+#      - master
+
 on:
   push:
     branches:
       - master
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   docker-build-and-push:
@@ -31,18 +38,17 @@ jobs:
       - name: Build image
         run: |
           cd $( dirname ${{ matrix.dockerfile.path }})
-          sed -i '/jupyterlab/d' requirements.txt
-          sed -i 's#etna\[all\]#etna[all] @ git+https://github.com/${{ github.repository }}.git@${{ github.sha }}#g' requirements.txt
+          echo -e "etna[all] @ git+https://github.com/${{ github.repository }}.git@${{ github.sha }}\n" > requirements.txt
           poetry export -E "all jupyter" --without-hashes --format=requirements.txt >> requirements.txt
           cat requirements.txt
           docker build . --tag image
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Push image
-        run: |
-          IMAGE_ID=ghcr.io/${{ github.repository }}/${{ matrix.dockerfile.name }}
-          VERSION=latest
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-          docker tag image $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+#      - name: Push image
+#        run: |
+#          IMAGE_ID=ghcr.io/${{ github.repository }}/${{ matrix.dockerfile.name }}
+#          VERSION=latest
+#          echo IMAGE_ID=$IMAGE_ID
+#          echo VERSION=$VERSION
+#          docker tag image $IMAGE_ID:$VERSION
+#          docker push $IMAGE_ID:$VERSION
