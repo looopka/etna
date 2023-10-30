@@ -14,6 +14,9 @@ from etna.models.base import DeepBaseNet
 from etna.models.nn.deepstate import LDS
 from etna.models.nn.deepstate import CompositeSSM
 
+from etna.distributions import BaseDistribution
+from etna.distributions import FloatDistribution
+from etna.distributions import IntDistribution
 
 class DeepStateBatch(TypedDict):
     """Batch specification for DeepStateModel."""
@@ -323,3 +326,21 @@ class DeepStateModel(DeepBaseModel):
             trainer_params=trainer_params,
             split_params=split_params,
         )
+
+
+    def params_to_tune(self) -> Dict[str, BaseDistribution]:
+        """Get default grid for tuning hyperparameters.
+
+        This grid tunes parameters: ``lr``, ``num_layers``, ``encoder_length``.
+        Other parameters are expected to be set by the user.
+
+        Returns
+        -------
+        :
+            Grid to tune.
+        """
+        return {
+            "num_layers": IntDistribution(low=1, high=3),
+            "lr": FloatDistribution(low=1e-5, high=1e-2, log=True),
+            "encoder_length": IntDistribution(low=1, high=20),
+        }
