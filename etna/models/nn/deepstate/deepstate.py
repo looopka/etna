@@ -9,14 +9,14 @@ import torch.nn as nn
 from torch import Tensor
 from typing_extensions import TypedDict
 
+from etna.distributions import BaseDistribution
+from etna.distributions import FloatDistribution
+from etna.distributions import IntDistribution
 from etna.models.base import DeepBaseModel
 from etna.models.base import DeepBaseNet
 from etna.models.nn.deepstate import LDS
 from etna.models.nn.deepstate import CompositeSSM
 
-from etna.distributions import BaseDistribution
-from etna.distributions import FloatDistribution
-from etna.distributions import IntDistribution
 
 class DeepStateBatch(TypedDict):
     """Batch specification for DeepStateModel."""
@@ -326,7 +326,6 @@ class DeepStateModel(DeepBaseModel):
             trainer_params=trainer_params,
             split_params=split_params,
         )
-
 
     def params_to_tune(self) -> Dict[str, BaseDistribution]:
         """Get default grid for tuning hyperparameters.
