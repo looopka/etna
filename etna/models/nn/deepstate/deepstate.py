@@ -307,14 +307,20 @@ class DeepStateModel(DeepBaseModel):
                 * **generator**: (*Optional[torch.Generator]*) - generator for reproducibile train-test splitting
                 * **torch_dataset_size**: (*Optional[int]*) - number of samples in dataset, in case of dataset not implementing ``__len__``
         """
+        self.ssm = (ssm,)
+        self.input_size = (input_size,)
+        self.num_layers = (num_layers,)
+        self.n_samples = (n_samples,)
+        self.lr = (lr,)
+        self.optimizer_params = optimizer_params
         super().__init__(
             net=DeepStateNet(
-                ssm=ssm,
-                input_size=input_size,
-                num_layers=num_layers,
-                n_samples=n_samples,
-                lr=lr,
-                optimizer_params=optimizer_params,
+                ssm=self.ssm,
+                input_size=self.input_size,
+                num_layers=self.num_layers,
+                n_samples=self.n_samples,
+                lr=self.lr,
+                optimizer_params=self.optimizer_params,
             ),
             encoder_length=encoder_length,
             decoder_length=decoder_length,
