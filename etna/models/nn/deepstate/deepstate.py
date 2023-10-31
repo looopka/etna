@@ -323,4 +323,3 @@ class DeepStateModel(DeepBaseModel):
             trainer_params=trainer_params,
             split_params=split_params,
         )
-
