@@ -82,7 +82,6 @@ def weekly_period_ts(n_repeats: int = 15, horizon: int = 7) -> Tuple["TSDataset"
 def splited_piecewise_constant_ts(
     first_constant_len=40, constant_1_1=7.0, constant_1_2=2.0, constant_2_1=50.0, constant_2_2=10.0, horizon=5
 ) -> Tuple["TSDataset", "TSDataset"]:
-
     segment_1 = [constant_1_1] * first_constant_len + [constant_1_2] * horizon * 2
     segment_2 = [constant_2_1] * first_constant_len + [constant_2_2] * horizon * 2
 

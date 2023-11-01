@@ -98,7 +98,6 @@ class TopDownReconciliator(BaseReconciliator):
         target_level_ts = ts.get_level_dataset(self.target_level)
 
         if source_level_index < target_level_index:
-
             summing_matrix = target_level_ts.hierarchical_structure.get_summing_matrix(  # type: ignore
                 target_level=self.source_level, source_level=self.target_level
             )

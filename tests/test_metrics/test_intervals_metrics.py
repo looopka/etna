@@ -29,7 +29,6 @@ def get_datasets_with_intervals(df, lower_name, upper_name):
 
 @pytest.fixture
 def tsdataset_with_zero_width_quantiles(example_df):
-
     df = TSDataset.to_dataset(example_df)
     ts_train = TSDataset(df, freq="H")
 

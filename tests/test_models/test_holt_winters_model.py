@@ -305,7 +305,6 @@ def test_forecast_decompose_timestamp_error(seasonal_dfs):
     ),
 )
 def test_predict_decompose_timestamp_error(outliers_df, train_slice, decompose_slice):
-
     model = _HoltWintersAdapter()
     model.fit(outliers_df.iloc[train_slice], [])
 

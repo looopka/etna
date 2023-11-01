@@ -462,7 +462,6 @@ class Auto(AutoBase):
         """
 
         def _objective(trial: Trial) -> float:
-
             pipeline_config = dict()
             pipeline_config.update(trial.relative_params)
             pipeline_config.update(trial.params)

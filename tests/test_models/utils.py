@@ -28,7 +28,6 @@ def get_loaded_model(model: ModelType) -> ModelType:
 def assert_model_equals_loaded_original(
     model: ModelType, ts: TSDataset, transforms: Sequence[Transform], horizon: int
 ) -> Tuple[ModelType, ModelType]:
-
     pipeline_1 = Pipeline(model=model, transforms=transforms, horizon=horizon)
     pipeline_1.fit(ts)
     seed_everything(0)

@@ -26,7 +26,6 @@ def get_loaded_pipeline(pipeline: AbstractPipeline, ts: TSDataset = None) -> Abs
 def assert_pipeline_equals_loaded_original(
     pipeline: AbstractPipeline, ts: TSDataset, load_ts: bool = True
 ) -> Tuple[AbstractPipeline, AbstractPipeline]:
-
     initial_ts = deepcopy(ts)
 
     pipeline.fit(ts)
