@@ -81,7 +81,6 @@ def test_load_without_ts(naive_pipeline_with_transforms, recwarn, tmp_path):
         ((1, 5, 0), (2, 5, 0)),
         ((2, 5, 0), (1, 5, 0)),
         ((1, 5, 0), (1, 3, 0)),
-        ((1, 5, 0), (1, 3, 0)),
         ((1, 5, 0), (1, 5, 1)),
         ((1, 5, 1), (1, 5, 0)),
     ],
