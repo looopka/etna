@@ -120,6 +120,7 @@ class MLPNet(DeepBaseNet):
         def _make(
             values_target: np.ndarray, values_real: np.ndarray, segment: str, start_idx: int, decoder_length: int
         ) -> Optional[dict]:
+            
             sample: Dict[str, Any] = {"decoder_real": list(), "decoder_target": list(), "segment": None}
             total_length = len(df["target"])
             total_sample_length = decoder_length

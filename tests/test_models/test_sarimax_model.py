@@ -362,6 +362,7 @@ def test_params_to_tune(model, example_tsds):
 
 
 def test_fit_params_passed_to_fit_method(example_tsds):
+    
     model = SARIMAXModel(fit_params={"disp": False})
     with patch("statsmodels.tsa.statespace.sarimax.SARIMAX.fit", Mock()):
         model.fit(example_tsds)

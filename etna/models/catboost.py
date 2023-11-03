@@ -28,6 +28,7 @@ class _CatBoostAdapter(BaseAdapter):
         thread_count: Optional[int] = None,
         **kwargs,
     ):
+        
         self.model = CatBoostRegressor(
             iterations=iterations,
             depth=depth,

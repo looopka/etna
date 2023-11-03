@@ -94,6 +94,7 @@ def test_mlp_forward_fail_nans():
 
 
 def test_mlp_step():
+    
     batch = {
         "decoder_real": torch.Tensor([[1, 2, 3], [1, 2, 3], [1, 2, 3]]),
         "decoder_target": torch.Tensor([[1], [2], [3]]),

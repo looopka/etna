@@ -196,6 +196,7 @@ class DeepStateNet(DeepBaseNet):
             encoder_length: int,
             decoder_length: int,
         ) -> Optional[dict]:
+            
             sample: Dict[str, Any] = {
                 "encoder_real": list(),
                 "decoder_real": list(),

@@ -35,6 +35,7 @@ def sqlite_storage():
 
 
 def test_config_sampler_one_thread(objective, config_sampler, expected_pipeline={"x": 2}):
+
     study = optuna.create_study(sampler=config_sampler)
     study.optimize(objective, n_trials=100)
     assert study.best_trial.user_attrs["pipeline"] == expected_pipeline
@@ -44,6 +45,7 @@ def test_config_sampler_one_thread(objective, config_sampler, expected_pipeline=
 def test_config_sampler_multithread_without_trials_count_check(
     objective, config_sampler, sqlite_storage, n_jobs=4, expected_pipeline={"x": 2}
 ):
+    
     study = optuna.create_study(sampler=config_sampler, storage=sqlite_storage)
     Parallel(n_jobs=n_jobs)(delayed(study.optimize)(objective) for _ in range(n_jobs))
 
@@ -52,6 +54,7 @@ def test_config_sampler_multithread_without_trials_count_check(
 
 @pytest.mark.skip(reason="The number of trials is non-deterministic")
 def test_config_sampler_multithread(objective, config_sampler, sqlite_storage, n_jobs=4, expected_pipeline={"x": 2}):
+    
     study = optuna.create_study(sampler=config_sampler, storage=sqlite_storage)
     Parallel(n_jobs=n_jobs)(delayed(study.optimize)(objective) for _ in range(n_jobs))
 
