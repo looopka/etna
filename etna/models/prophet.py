@@ -51,7 +51,7 @@ class _ProphetAdapter(BaseAdapter):
         stan_backend: Optional[str] = None,
         additional_seasonality_params: Iterable[Dict[str, Union[str, float, int]]] = (),
     ):
-        
+
         self.growth = growth
         self.n_changepoints = n_changepoints
         self.changepoints = changepoints

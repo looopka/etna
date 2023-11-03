@@ -195,7 +195,7 @@ class DeadlineMovingAverageModel(
 
         components_data = []
         for i in range(start_idx, end_idx):
-            
+
             obs_components = []
             for w in range(1, self.window + 1):
                 prev_date = self._get_previous_date(date=result_template.index[i], offset=w)
