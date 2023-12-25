@@ -8,56 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
+- Add `electricity` to internal datasets ([#60](https://github.com/etna-team/etna/pull/60))
+- Add `parts` argument to `load_dataset` function ([#79](https://github.com/etna-team/etna/pull/79))
+- Add `M4` to internal datasets ([#83](https://github.com/etna-team/etna/pull/83))
+- Add `M3` to internal datasets ([#91](https://github.com/etna-team/etna/pull/91))
+- Add `traffic_2008` to internal datasets ([#94](https://github.com/etna-team/etna/pull/94))
+- Add `traffic_2015` to internal datasets ([#100](https://github.com/etna-team/etna/pull/100))
+- Add `tourism` to internal datasets ([#120](https://github.com/etna-team/etna/pull/120))
+- Add `weather` to internal datasets ([#125](https://github.com/etna-team/etna/pull/125)) 
+- Add `ETT` to internal datasets ([#134](https://github.com/etna-team/etna/pull/134))
+- Add `list_datasets` function ([#145](https://github.com/etna-team/etna/pull/149))
+- Add `IHEPC` to internal datasets ([#150](https://github.com/etna-team/etna/pull/150))
+- Add dataset integrity check using hash for internal datasets ([#151](https://github.com/etna-team/etna/pull/151))
+- Create page about internal datasets in documentation ([#175](https://github.com/etna-team/etna/pull/175))
+- Add usage example of internal datasets in `101-get_started.ipynb` and `305-classification.ipynb` tutorials ([#202](https://github.com/etna-team/etna/pull/202))
+-
 
 ### Changed
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
+-
 
 ### Fixed
+- Fix `traffic_2008` ([128](https://github.com/etna-team/etna/pull/128))
+- Fix number of segments in docs, column name for tourism dataset and change default save path ([#206](https://github.com/etna-team/etna/pull/206))
 - Fix method `to_dict` for `SklearnPerSegmentModel` and `SklearnMultiSegmentModel`([#199](https://github.com/etna-team/etna/pull/199))
 - 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
--
+
 
 ## [2.4.0] - 2023-12-15
 ### Added
