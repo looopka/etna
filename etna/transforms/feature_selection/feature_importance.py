@@ -258,4 +258,6 @@ class MRMRFeatureSelectionTransform(BaseFeatureSelectionTransform):
         """
         return {
             "top_k": IntDistribution(low=1, high=self.top_k),
+            "relevance_aggregation_mode": CategoricalDistribution(["mean", "median", "max", "min"]),
+            "redundancy_aggregation_mode": CategoricalDistribution(["mean", "median", "max", "min"]),
         }

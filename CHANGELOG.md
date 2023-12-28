@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add dataset integrity check using hash for internal datasets ([#151](https://github.com/etna-team/etna/pull/151))
 - Create page about internal datasets in documentation ([#175](https://github.com/etna-team/etna/pull/175))
 - Add usage example of internal datasets in `101-get_started.ipynb` and `305-classification.ipynb` tutorials ([#202](https://github.com/etna-team/etna/pull/202))
--
+- Add `params_to_tune` to `MRMRFeatureSelectionTransform`
 
 ### Changed
 -
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `traffic_2008` ([128](https://github.com/etna-team/etna/pull/128))
 - Fix number of segments in docs, column name for tourism dataset and change default save path ([#206](https://github.com/etna-team/etna/pull/206))
 - Fix method `to_dict` for `SklearnPerSegmentModel` and `SklearnMultiSegmentModel`([#199](https://github.com/etna-team/etna/pull/199))
-- 
+- Fix method `fit` for `MRMRFeatureSelectionTransform` with `redundancy_aggregation_mode`=`median` 
 
 
 ## [2.4.0] - 2023-12-15
