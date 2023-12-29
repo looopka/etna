@@ -25,13 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -
 
 ### Changed
--
+- Add `relevance_aggregation_mode` and `redundancy_aggregation_mode` into `MRMRFeatureSelectionTransform.params_to_tune` ([#212](https://github.com/etna-team/etna/pull/212))
 
 ### Fixed
 - Fix `traffic_2008` ([128](https://github.com/etna-team/etna/pull/128))
 - Fix number of segments in docs, column name for tourism dataset and change default save path ([#206](https://github.com/etna-team/etna/pull/206))
 - Fix method `to_dict` for `SklearnPerSegmentModel` and `SklearnMultiSegmentModel`([#199](https://github.com/etna-team/etna/pull/199))
-- 
+- Fix method `fit` for `MRMRFeatureSelectionTransform` with `redundancy_aggregation_mode`=`median` ([#212](https://github.com/etna-team/etna/pull/212))
 
 
 ## [2.4.0] - 2023-12-15
