@@ -5,6 +5,7 @@ import pytest
 from etna.datasets import TSDataset
 from etna.datasets import generate_const_df
 from etna.transforms.timestamp import HolidayTransform
+from etna.transforms.timestamp.holiday import define_period
 from tests.test_transforms.utils import assert_transformation_equals_loaded_original
 
 
@@ -27,6 +28,14 @@ def simple_constant_df_daily():
 
 
 @pytest.fixture()
+def simple_constant_df_day_15_min():
+    df = pd.DataFrame({"timestamp": pd.date_range(start="2020-11-25 22:30", end="2020-12-11", freq="1D 15MIN")})
+    df["target"] = 42
+    df.set_index("timestamp", inplace=True)
+    return df
+
+
+@pytest.fixture()
 def two_segments_simple_ts_daily(simple_constant_df_daily: pd.DataFrame):
     df_1 = simple_constant_df_daily.reset_index()
     df_2 = simple_constant_df_daily.reset_index()
@@ -42,11 +51,64 @@ def two_segments_simple_ts_daily(simple_constant_df_daily: pd.DataFrame):
 
 
 @pytest.fixture()
+def two_segments_simple_ts_day_15min(simple_constant_df_day_15_min: pd.DataFrame):
+    df_1 = simple_constant_df_day_15_min.reset_index()
+    df_2 = simple_constant_df_day_15_min.reset_index()
+    df_1 = df_1[3:]
+
+    df_1["segment"] = "segment_1"
+    df_2["segment"] = "segment_2"
+
+    classic_df = pd.concat([df_1, df_2], ignore_index=True)
+    df = TSDataset.to_dataset(classic_df)
+    ts = TSDataset(df, freq="1D 15MIN")
+    return ts
+
+
+@pytest.fixture()
 def simple_constant_df_hour():
     df = pd.DataFrame({"timestamp": pd.date_range(start="2020-01-08 22:15", end="2020-01-10", freq="H")})
     df["target"] = 42
     df.set_index("timestamp", inplace=True)
     return df
+
+
+@pytest.fixture()
+def simple_week_mon_df():
+    df = pd.DataFrame({"timestamp": pd.date_range(start="2020-01-08 22:15", end="2020-05-12", freq="W-MON")})
+    df["target"] = 7
+    df.set_index("timestamp", inplace=True)
+    return df
+
+
+@pytest.fixture()
+def two_segments_w_mon(simple_week_mon_df: pd.DataFrame):
+    df_1 = simple_week_mon_df.reset_index()
+    df_2 = simple_week_mon_df.reset_index()
+    df_1 = df_1[3:]
+
+    df_1["segment"] = "segment_1"
+    df_2["segment"] = "segment_2"
+
+    classic_df = pd.concat([df_1, df_2], ignore_index=True)
+    df = TSDataset.to_dataset(classic_df)
+    ts = TSDataset(df, freq="W-MON")
+    return ts
+
+
+@pytest.fixture()
+def two_segments_simple_ts_hour(simple_constant_df_hour: pd.DataFrame):
+    df_1 = simple_constant_df_hour.reset_index()
+    df_2 = simple_constant_df_hour.reset_index()
+    df_1 = df_1[3:]
+
+    df_1["segment"] = "segment_1"
+    df_2["segment"] = "segment_2"
+
+    classic_df = pd.concat([df_1, df_2], ignore_index=True)
+    df = TSDataset.to_dataset(classic_df)
+    ts = TSDataset(df, freq="H")
+    return ts
 
 
 @pytest.fixture()
@@ -194,18 +256,24 @@ def test_holidays_min(iso_code: str, answer: np.array, two_segments_simple_ts_mi
         assert np.array_equal(df[segment]["regressor_holidays"].values, answer)
 
 
-@pytest.mark.parametrize(
-    "index",
-    (
-        (pd.date_range(start="2020-11-25 22:30", end="2020-12-11", freq="1D 15MIN")),
-        (pd.date_range(start="2019-11-25", end="2021-02-25", freq="M")),
-    ),
-)
-def test_holidays_failed(index: pd.DatetimeIndex, two_segments_simple_ts_daily: TSDataset):
-    ts = two_segments_simple_ts_daily
-    ts.df.index = index
+@pytest.mark.parametrize("ts_name", ("two_segments_w_mon", "two_segments_simple_ts_day_15min"))
+def test_holidays_failed(ts_name, request):
+    ts = request.getfixturevalue(ts_name)
     holidays_finder = HolidayTransform(out_column="holiday")
-    with pytest.raises(ValueError, match="Frequency of data should be no more than daily."):
+    with pytest.raises(
+        ValueError, match="For binary and category modes frequency of data should be no more than daily."
+    ):
+        ts = holidays_finder.fit_transform(ts)
+
+
+@pytest.mark.parametrize("ts_name", ("two_segments_simple_ts_daily", "two_segments_simple_ts_min"))
+def test_holidays_days_count_mode_failed(ts_name, request):
+    ts = request.getfixturevalue(ts_name)
+    holidays_finder = HolidayTransform(out_column="holiday", mode="days_count")
+    with pytest.raises(
+        ValueError,
+        match=f"Days_count mode works only with weekly, monthly, quarterly or yearly data. You have freq={ts.freq}",
+    ):
         ts = holidays_finder.fit_transform(ts)
 
 
@@ -224,3 +292,25 @@ def test_save_load(example_tsds):
 def test_params_to_tune():
     transform = HolidayTransform()
     assert len(transform.params_to_tune()) == 0
+
+
+@pytest.mark.parametrize(
+    "freq, timestamp, expected_result",
+    (
+        ("Y", pd.Timestamp("2000-12-31"), [pd.Timestamp("2000-01-01"), pd.Timestamp("2000-12-31")]),
+        ("YS", pd.Timestamp("2000-01-01"), [pd.Timestamp("2000-01-01"), pd.Timestamp("2000-12-31")]),
+        ("A-OCT", pd.Timestamp("2000-10-31"), [pd.Timestamp("2000-01-01"), pd.Timestamp("2000-12-31")]),
+        ("AS-OCT", pd.Timestamp("2000-10-01"), [pd.Timestamp("2000-01-01"), pd.Timestamp("2000-12-31")]),
+        ("Q", pd.Timestamp("2000-12-31"), [pd.Timestamp("2000-10-01"), pd.Timestamp("2000-12-31")]),
+        ("QS", pd.Timestamp("2000-01-01"), [pd.Timestamp("2000-01-01"), pd.Timestamp("2000-03-31")]),
+        ("Q-NOV", pd.Timestamp("2000-11-30"), [pd.Timestamp("2000-09-01"), pd.Timestamp("2000-11-30")]),
+        ("QS-NOV", pd.Timestamp("2000-11-01"), [pd.Timestamp("2000-11-01"), pd.Timestamp("2001-01-31")]),
+        ("M", pd.Timestamp("2000-01-31"), [pd.Timestamp("2000-01-01"), pd.Timestamp("2000-01-31")]),
+        ("MS", pd.Timestamp("2000-01-01"), [pd.Timestamp("2000-01-01"), pd.Timestamp("2000-01-31")]),
+        ("W", pd.Timestamp("2000-12-03"), [pd.Timestamp("2000-11-27"), pd.Timestamp("2000-12-03")]),
+        ("W-THU", pd.Timestamp("2000-11-30"), [pd.Timestamp("2000-11-27"), pd.Timestamp("2000-12-03")]),
+    ),
+)
+def test_define_period_end(freq, timestamp, expected_result):
+    assert (define_period(pd.tseries.frequencies.to_offset(freq), timestamp, freq))[0] == expected_result[0]
+    assert (define_period(pd.tseries.frequencies.to_offset(freq), timestamp, freq))[1] == expected_result[1]
