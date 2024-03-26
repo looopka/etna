@@ -3,7 +3,6 @@ from typing import List
 from typing import Optional
 
 import holidays
-import numpy as np
 import pandas as pd
 from pandas.tseries.offsets import MonthBegin
 from pandas.tseries.offsets import MonthEnd
@@ -17,7 +16,10 @@ from typing_extensions import assert_never
 from etna.datasets import TSDataset
 from etna.transforms.base import IrreversibleTransform
 
+_DEFAULT_FREQ = object()
 
+
+# TODO: it shouldn't be called on freq=None, we should discuss this
 def bigger_than_day(freq: Optional[str]):
     """Compare frequency with day."""
     dt = "2000-01-01"
@@ -26,6 +28,7 @@ def bigger_than_day(freq: Optional[str]):
     return dates_freq[-1] > dates_day[-1]
 
 
+# TODO: it shouldn't be called on freq=None, we should discuss this
 def define_period(offset: pd.tseries.offsets.BaseOffset, dt: pd.Timestamp, freq: Optional[str]):
     """Define start_date and end_date of period using dataset frequency."""
     if isinstance(offset, Week) and offset.weekday == 6:
@@ -67,6 +70,7 @@ class HolidayTransformMode(str, Enum):
         )
 
 
+# TODO: discuss conceptual problems with
 class HolidayTransform(IrreversibleTransform):
     """
     HolidayTransform generates series that indicates holidays in given dataset.
@@ -82,7 +86,13 @@ class HolidayTransform(IrreversibleTransform):
 
     _no_holiday_name: str = "NO_HOLIDAY"
 
-    def __init__(self, iso_code: str = "RUS", mode: str = "binary", out_column: Optional[str] = None):
+    def __init__(
+        self,
+        iso_code: str = "RUS",
+        mode: str = "binary",
+        out_column: Optional[str] = None,
+        in_column: Optional[str] = None,
+    ):
         """
         Create instance of HolidayTransform.
 
@@ -95,20 +105,54 @@ class HolidayTransform(IrreversibleTransform):
             `days_count` to determine the proportion of holidays in a given period of time.
         out_column:
             name of added column. Use ``self.__repr__()`` if not given.
+        in_column:
+            name of column to work with; if not given, index is used, only datetime index is supported
         """
-        super().__init__(required_features=["target"])
+        if in_column is None:
+            required_features = ["target"]
+        else:
+            required_features = [in_column]
+        super().__init__(required_features=required_features)
+
         self.iso_code = iso_code
         self.mode = mode
         self._mode = HolidayTransformMode(mode)
+        self._freq: Optional[str] = _DEFAULT_FREQ  # type: ignore
         self.holidays = holidays.country_holidays(iso_code)
         self.out_column = out_column
-        self.freq: Optional[str] = None
+        self.in_column = in_column
+
+        if self.in_column is None:
+            self.in_column_regressor: Optional[bool] = True
+        else:
+            self.in_column_regressor = None
 
     def _get_column_name(self) -> str:
         if self.out_column:
             return self.out_column
         else:
             return self.__repr__()
+
+    def fit(self, ts: TSDataset) -> "HolidayTransform":
+        """Fit the transform.
+
+        Parameters
+        ----------
+        ts:
+            Dataset to fit the transform on.
+
+        Returns
+        -------
+        :
+            The fitted transform instance.
+        """
+        if self.in_column is None:
+            self.in_column_regressor = True
+        else:
+            self.in_column_regressor = self.in_column in ts.regressors
+        self._freq = ts.freq
+        super().fit(ts)
+        return self
 
     def _fit(self, df: pd.DataFrame) -> "HolidayTransform":
         """Fit the transform.
@@ -125,22 +169,39 @@ class HolidayTransform(IrreversibleTransform):
         """
         return self
 
-    def fit(self, ts: TSDataset):
-        """Fit the transform.
+    def _compute_feature(self, timestamps: pd.Series) -> pd.Series:
+        if bigger_than_day(self._freq) and self._mode is not HolidayTransformMode.days_count:
+            raise ValueError("For binary and category modes frequency of data should be no more than daily.")
 
-        Parameters
-        ----------
-        ts:
-            Dataset to fit the transform on.
+        if self._mode is HolidayTransformMode.days_count:
+            date_offset = pd.tseries.frequencies.to_offset(self._freq)
+            values = []
+            for dt in timestamps:
+                if dt is pd.NaT:
+                    values.append(pd.NA)
+                else:
+                    start_date, end_date = define_period(date_offset, pd.Timestamp(dt), self._freq)
+                    date_range = pd.date_range(start=start_date, end=end_date, freq="D")
+                    count_holidays = sum(1 for d in date_range if d in self.holidays)
+                    holidays_freq = count_holidays / date_range.size
+                    values.append(holidays_freq)
+            result = pd.Series(values)
+        elif self._mode is HolidayTransformMode.category:
+            values = []
+            for t in timestamps:
+                if t is pd.NaT:
+                    values.append(pd.NA)
+                elif t in self.holidays:
+                    values.append(self.holidays[t])
+                else:
+                    values.append(self._no_holiday_name)
+            result = pd.Series(values)
+        elif self._mode is HolidayTransformMode.binary:
+            result = pd.Series([int(x in self.holidays) if x is not pd.NaT else pd.NA for x in timestamps])
+        else:
+            assert_never(self._mode)
 
-        Returns
-        -------
-        :
-            The fitted transform instance.
-        """
-        super().fit(ts=ts)
-        self.freq = ts.freq
-        return self
+        return result
 
     def _transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -148,7 +209,7 @@ class HolidayTransform(IrreversibleTransform):
 
         Parameters
         ----------
-        df: pd.DataFrame
+        df:
             value series with index column in timestamp format
 
         Returns
@@ -159,45 +220,38 @@ class HolidayTransform(IrreversibleTransform):
         Raises
         ------
         ValueError:
+            if transform isn't fitted
+        ValueError:
             if the frequency is greater than daily and this is a ``binary`` or ``categorical`` mode
         ValueError:
             if the frequency is not weekly, monthly, quarterly or yearly and this is ``days_count`` mode
         """
-        if self.freq is None:
+        if self._freq is _DEFAULT_FREQ:
             raise ValueError("Transform is not fitted")
-        if bigger_than_day(self.freq) and self._mode is not HolidayTransformMode.days_count:
-            raise ValueError("For binary and category modes frequency of data should be no more than daily.")
 
-        cols = df.columns.get_level_values("segment").unique()
         out_column = self._get_column_name()
+        if self.in_column is None:
+            if pd.api.types.is_integer_dtype(df.index.dtype):
+                raise ValueError("Transform can't work with integer index, parameter in_column should be set!")
 
-        if self._mode is HolidayTransformMode.days_count:
-            date_offset = pd.tseries.frequencies.to_offset(self.freq)
-            encoded_matrix = np.empty(0)
-            for dt in df.index:
-                start_date, end_date = define_period(date_offset, pd.Timestamp(dt), self.freq)
-                date_range = pd.date_range(start=start_date, end=end_date, freq="D")
-                count_holidays = sum(1 for d in date_range if d in self.holidays)
-                holidays_freq = count_holidays / date_range.size
-                encoded_matrix = np.append(encoded_matrix, holidays_freq)
-        elif self._mode is HolidayTransformMode.category:
-            encoded_matrix = np.array(
-                [self.holidays[x] if x in self.holidays else self._no_holiday_name for x in df.index]
+            feature = self._compute_feature(timestamps=df.index).values
+            cols = df.columns.get_level_values("segment").unique()
+            encoded_matrix = feature.reshape(-1, 1).repeat(len(cols), axis=1)
+            wide_df = pd.DataFrame(
+                encoded_matrix,
+                columns=pd.MultiIndex.from_product([cols, [out_column]], names=("segment", "feature")),
+                index=df.index,
             )
-        elif self._mode is HolidayTransformMode.binary:
-            encoded_matrix = np.array([int(x in self.holidays) for x in df.index])
         else:
-            assert_never(self._mode)
-        encoded_matrix = encoded_matrix.reshape(-1, 1).repeat(len(cols), axis=1)
-        encoded_df = pd.DataFrame(
-            encoded_matrix,
-            columns=pd.MultiIndex.from_product([cols, [out_column]], names=("segment", "feature")),
-            index=df.index,
-        )
-        if self._mode is not HolidayTransformMode.days_count:
-            encoded_df = encoded_df.astype("category")
-        df = df.join(encoded_df)
-        df = df.sort_index(axis=1)
+            features = TSDataset.to_flatten(df=df, features=[self.in_column])
+            features[out_column] = self._compute_feature(timestamps=features[self.in_column])
+            features.drop(columns=[self.in_column], inplace=True)
+            wide_df = TSDataset.to_dataset(features)
+
+        if self._mode is HolidayTransformMode.binary or self._mode is HolidayTransformMode.category:
+            wide_df = wide_df.astype("category")
+
+        df = pd.concat([df, wide_df], axis=1).sort_index(axis=1)
         return df
 
     def get_regressors_info(self) -> List[str]:
@@ -207,4 +261,10 @@ class HolidayTransform(IrreversibleTransform):
         :
             List with regressors created by the transform.
         """
+        if self.in_column_regressor is None:
+            raise ValueError("Fit the transform to get the correct regressors info!")
+
+        if not self.in_column_regressor:
+            return []
+
         return [self._get_column_name()]

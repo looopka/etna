@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 - 
 - 
+- Add warning on trying to pass numeric timestamp if freq is not None and add `_cast_index_to_datetime` ([#214](https://github.com/etna-team/etna/pull/214))
+- 
+- 
+- 
+- 
+- 
+- 
+- Add `infer_alignment`, `apply_alignment`, `make_timestamp_df` into `etna.dataset.utils` ([#256](https://github.com/etna-team/etna/pull/256))
+- 
+- 
+- 
+- Add `TSDataset.create_from_misaligned` constructor ([#269](https://github.com/etna-team/etna/pull/269))
+- 
 - 
 - 
 - 
@@ -35,6 +48,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 - 
 - 
+- Add ignoring of integer timestamp as a feature into native DL models ([#210](https://github.com/etna-team/etna/pull/210))
+- Update `pytorch_forecasting` models to handle integer timestamp ([#208](https://github.com/etna-team/etna/pull/208))
+- Update `datasets` module to work with integer timestamp ([#146](https://github.com/etna-team/etna/pull/146))
+- 
+- 
+- Add tests for `transform` on data with integer timestamp ([#153](https://github.com/etna-team/etna/pull/153))
+- Add tests for `models` on data with integer timestamp ([#188](https://github.com/etna-team/etna/pull/188))
+- 
+- Update `DateFlagsTransform`, `TimeFlagsTransform`, `HolidayTransform`, `SpecialDaysTransform`, `FourierTransform` to work with external timestamp ([#169](https://github.com/etna-team/etna/pull/169))
+- Update `analysis` module to work with integer timestamp ([#161](https://github.com/etna-team/etna/pull/161))
+- 
+- Update `StatsForecastARIMAModel`, `StatsForecastAutoARIMAModel`, `StatsForecastAutoCESModel`, `StatsForecastAutoETSModel`, `StatsForecastAutoThetaModel` to handle integer timestamp ([#197](https://github.com/etna-team/etna/pull/197))
+- Update `MRMRFeatureSelectionTransform` to handle integer timestamp ([#164](https://github.com/etna-team/etna/pull/164))
+- 
+- Update deseasonality transforms (`STLTransform`, `DeseasonalityTransform`) to handle integer timestamp ([#174](https://github.com/etna-team/etna/pull/174))
+- Update `HoltModel`, `HoltWintersModel`, `SimpleExpSmoothingModel`, `SARIMAXModel`, `AutoARIMAModel` to handle integer timestamp ((#200)[https://github.com/etna-team/etna/pull/200])
+- Update detrend transforms (`LinearTrendTransform`, `TheilSenTrendTransform`) to handle integer timestamp ([#163](https://github.com/etna-team/etna/pull/163))
+- Update `ResampleWithDistributionTransform` to work with integer timestamp ([#165](https://github.com/etna-team/etna/pull/165))
+- 
+- Update change point transforms (`ChangePointsSegmentationTransform`, `ChangePointsTrendTransform`, `ChangePointsLevelTransform`, `TrendTransform`) to handle integer timestamp ([#176](https://github.com/etna-team/etna/pull/176))
+- Update `BATSModel`, `TBATSModel` models to work with integer timestamp ([#195](https://github.com/etna-team/etna/pull/195))
+- Update `ProphetModel` to handle external timestamp ([#203](https://github.com/etna-team/etna/pull/203))
+- Remove checking frequency in `timestamp_column` of `ProphetModel` ([#222](https://github.com/etna-team/etna/pull/222))
+- Update `FourierTransform` to handle external datetime timestamp ([#223](https://github.com/etna-team/etna/pull/223))
+- Update `FoldMask` to work with integer timestamp, in `validate_on_dataset` method add validation on presence of `FoldMask` parameters in `ts.index`, add tests for `FoldMask` ([#226](https://github.com/etna-team/etna/pull/226))
+- Fix `FourierTransform` on integer index, add inference tests ([#230](https://github.com/etna-team/etna/pull/230))
+- Update outliers transforms to handle integer timestamp ([#229](https://github.com/etna-team/etna/pull/229))
+- Update pipelines to handle integer timestamp ([#241](https://github.com/etna-team/etna/pull/241))
+- Add `timestamp_range` and refactor code with it ([#244](https://github.com/etna-team/etna/pull/244))
+- Update CLI to handle integer timestamp ([#246](https://github.com/etna-team/etna/pull/246))
+- Update `ExogShiftTransform` to handle integer timestamp ([#254](https://github.com/etna-team/etna/pull/254))
+- Extend base `TSDataset` constructor to handle long format dataframes, update documentation and tutorials with this change ([#266](https://github.com/etna-team/etna/pull/266))
 - 
 - 
 - 
@@ -54,7 +99,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 - 
 - 
+- Prohibit empty list value and duplication of `target_timestamps` parameter in `FoldMask` ([#226](https://github.com/etna-team/etna/pull/226))
 - 
+- 
+- Fix `DeseasonalityTransform` fails to inverse transform short series ([#174](https://github.com/etna-team/etna/pull/174))
+- 
+- Fix indexing in `stl_plot`, `plot_periodogram`, `plot_holidays`, `plot_backtest`, `plot_backtest_interactive`, `ResampleWithDistributionTransform` ([#244](https://github.com/etna-team/etna/pull/244))
+- Fix `DifferencingTransform` to handle integer timestamp on test ([#244](https://github.com/etna-team/etna/pull/244))
 - 
 - 
 - 
