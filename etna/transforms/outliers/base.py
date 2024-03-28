@@ -17,7 +17,7 @@ from etna.transforms.utils import check_new_segments
 class OutliersTransform(ReversibleTransform, ABC):
     """Finds outliers in specific columns of DataFrame and replaces it with NaNs."""
 
-    def __init__(self, in_column: str):
+    def __init__(self, in_column: str, ignore_flag_column: Optional[str] = None):
         """
         Create instance of OutliersTransform.
 
@@ -25,9 +25,15 @@ class OutliersTransform(ReversibleTransform, ABC):
         ----------
         in_column:
             name of processed column
+        ignore_flag_column:
+            name of column binary flag of holidays
         """
-        super().__init__(required_features=[in_column])
+        if ignore_flag_column:
+            super().__init__(required_features=[in_column, ignore_flag_column])
+        else:
+            super().__init__(required_features=[in_column])
         self.in_column = in_column
+        self.ignore_flag_column = ignore_flag_column
 
         self.segment_outliers: Optional[Dict[str, pd.Series]] = None
 
@@ -78,6 +84,10 @@ class OutliersTransform(ReversibleTransform, ABC):
         :
             The fitted transform instance.
         """
+        if not self.ignore_flag_column in ts.regressors:
+            raise ValueError('Name ignore_flag_column not find.')
+        if not all([ts[:, segment, self.ignore_flag_column].isin([0, 1]).all() for segment in ts.segments]):
+            raise ValueError('Columns ignore_flag contain non binary value')
         self.segment_outliers = self.detect_outliers(ts)
         self._fit_segments = ts.segments
         super().fit(ts=ts)
@@ -131,8 +141,12 @@ class OutliersTransform(ReversibleTransform, ABC):
             if segment not in segments:
                 continue
             # to locate only present indices
-            segment_outliers_timestamps = list(index_set.intersection(self.segment_outliers[segment].index.values))
+            available_points = set(df[df[segment, self.ignore_flag_column] == 0].index.values)
+            segment_outliers_timestamps = list(
+                available_points.intersection(self.segment_outliers[segment].index.values))
+
             df.loc[segment_outliers_timestamps, pd.IndexSlice[segment, self.in_column]] = np.NaN
+
         return df
 
     def _inverse_transform(self, df: pd.DataFrame) -> pd.DataFrame:
