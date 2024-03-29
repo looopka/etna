@@ -9,6 +9,7 @@ from etna.datasets.tsdataset import TSDataset
 from etna.models import ProphetModel
 from etna.models import SARIMAXModel
 from etna.transforms import DensityOutliersTransform
+from etna.transforms import HolidayTransform
 from etna.transforms import MedianOutliersTransform
 from etna.transforms import PredictionIntervalOutliersTransform
 from tests.test_transforms.utils import assert_sampling_is_valid
@@ -39,6 +40,34 @@ def outliers_solid_tsds():
         freq="D",
         known_future="all",
     )
+    return ts
+
+
+@pytest.fixture()
+def outliers_solid_tsds_with_holidays():
+    """Create TSDataset with outliers with holidays"""
+    timestamp = pd.date_range("2021-01-01", end="2021-02-20", freq="D")
+    target1 = [np.sin(i) for i in range(len(timestamp))]
+    target1[10] += 10
+
+    target2 = [np.sin(i) for i in range(len(timestamp))]
+    target2[8] += 8
+    target2[15] = 2
+    target2[26] -= 12
+
+    df1 = pd.DataFrame({"timestamp": timestamp, "target": target1, "segment": "1"})
+    df2 = pd.DataFrame({"timestamp": timestamp, "target": target2, "segment": "2"})
+    df = pd.concat([df1, df2], ignore_index=True)
+    df_exog = df.copy()
+    df_exog.columns = ["timestamp", "regressor_1", "segment"]
+    ts = TSDataset(
+        df=TSDataset.to_dataset(df).iloc[:-10],
+        df_exog=TSDataset.to_dataset(df_exog),
+        freq="D",
+        known_future="all",
+    )
+    holiday_transform = HolidayTransform(iso_code="RUS", mode="binary", out_column="is_holiday")
+    ts = holiday_transform.fit_transform(ts)
     return ts
 
 
@@ -255,3 +284,35 @@ def test_params_to_tune(transform, outliers_solid_tsds):
     ts = outliers_solid_tsds
     assert len(transform.params_to_tune()) > 0
     assert_sampling_is_valid(transform=transform, ts=ts)
+
+
+@pytest.mark.parametrize(
+    "transform",
+    (
+        MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
+        DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
+        # PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
+    ),
+)
+def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
+    ts = outliers_solid_tsds_with_holidays
+    assert len(transform.params_to_tune()) > 0
+    transform.fit(ts)
+    ts_output = transform.transform(ts)
+    assert ts_output["2021-01-06":"2021-01-06", "1", "target"][0] != np.nan
+
+
+@pytest.mark.parametrize(
+    "transform",
+    (
+        MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
+        DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
+        PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
+    ),
+)
+def test_incorrect_formats(transform, outliers_solid_tsds):
+    ts = outliers_solid_tsds
+    assert len(transform.params_to_tune()) > 0
+    with pytest.raises(ValueError):
+        transform.fit(ts)
+        _ = transform.transform(ts)

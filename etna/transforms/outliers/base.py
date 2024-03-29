@@ -84,10 +84,12 @@ class OutliersTransform(ReversibleTransform, ABC):
         :
             The fitted transform instance.
         """
-        if not self.ignore_flag_column in ts.regressors:
-            raise ValueError('Name ignore_flag_column not find.')
-        if not all([ts[:, segment, self.ignore_flag_column].isin([0, 1]).all() for segment in ts.segments]):
-            raise ValueError('Columns ignore_flag contain non binary value')
+        if self.ignore_flag_column is not None and self.ignore_flag_column not in ts.regressors:
+            raise ValueError("Name ignore_flag_column not find.")
+        if self.ignore_flag_column is not None and not all(
+            [ts[:, segment, self.ignore_flag_column].isin([0, 1]).all() for segment in ts.segments]
+        ):
+            raise ValueError("Columns ignore_flag contain non binary value")
         self.segment_outliers = self.detect_outliers(ts)
         self._fit_segments = ts.segments
         super().fit(ts=ts)
@@ -141,9 +143,13 @@ class OutliersTransform(ReversibleTransform, ABC):
             if segment not in segments:
                 continue
             # to locate only present indices
-            available_points = set(df[df[segment, self.ignore_flag_column] == 0].index.values)
+            if self.ignore_flag_column:
+                available_points = set(df[df[segment, self.ignore_flag_column] == 0].index.values)
+            else:
+                available_points = index_set
             segment_outliers_timestamps = list(
-                available_points.intersection(self.segment_outliers[segment].index.values))
+                available_points.intersection(self.segment_outliers[segment].index.values)
+            )
 
             df.loc[segment_outliers_timestamps, pd.IndexSlice[segment, self.in_column]] = np.NaN
 
