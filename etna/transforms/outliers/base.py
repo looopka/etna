@@ -87,7 +87,7 @@ class OutliersTransform(ReversibleTransform, ABC):
         if self.ignore_flag_column is not None and self.ignore_flag_column not in ts.regressors:
             raise ValueError("Name ignore_flag_column not find.")
         if self.ignore_flag_column is not None and not all(
-            [ts[:, segment, self.ignore_flag_column].isin([0, 1]).all() for segment in ts.segments]
+            ts[:, segment, self.ignore_flag_column].isin([0, 1]).all() for segment in ts.segments
         ):
             raise ValueError("Columns ignore_flag contain non binary value")
         self.segment_outliers = self.detect_outliers(ts)
