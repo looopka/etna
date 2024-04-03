@@ -1,3 +1,6 @@
+import re
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -12,8 +15,10 @@ from etna.transforms import DensityOutliersTransform
 from etna.transforms import HolidayTransform
 from etna.transforms import MedianOutliersTransform
 from etna.transforms import PredictionIntervalOutliersTransform
+from tests.test_transforms.utils import assert_column_changes
 from tests.test_transforms.utils import assert_sampling_is_valid
 from tests.test_transforms.utils import assert_transformation_equals_loaded_original
+from tests.test_transforms.utils import find_columns_diff
 from tests.utils import select_segments_subset
 
 
@@ -68,6 +73,64 @@ def outliers_solid_tsds_with_holidays():
     )
     holiday_transform = HolidayTransform(iso_code="RUS", mode="binary", out_column="is_holiday")
     ts = holiday_transform.fit_transform(ts)
+    return ts
+
+
+@pytest.fixture()
+def outliers_solid_tsds_with_error():
+    """Create TSDataset with outliers error inside ts, incorrect type column"""
+    timestamp = pd.date_range("2021-01-01", end="2021-02-20", freq="D")
+    target1 = [np.sin(i) for i in range(len(timestamp))]
+    target1[5] += 10
+    info_col1 = [1 if np.sin(i) > 0.5 else 0 for i in range(len(timestamp))]
+    info_col1[9] = 4
+
+    target2 = [np.sin(i) for i in range(len(timestamp))]
+    target2[8] += 8
+    target2[15] = 2
+    target2[26] -= 12
+    info_col2 = [1 if np.sin(i) > 0 else 0 for i in range(len(timestamp))]
+    info_col2[10] = 14
+
+    df1 = pd.DataFrame({"timestamp": timestamp, "target": target1, "segment": "1", "is_holiday": info_col1})
+    df2 = pd.DataFrame({"timestamp": timestamp, "target": target2, "segment": "2", "is_holiday": info_col2})
+    df = pd.concat([df1, df2], ignore_index=True)
+    df_exog = df.copy()
+    df_exog.columns = ["timestamp", "regressor_1", "segment", "is_holiday"]
+    ts = TSDataset(
+        df=TSDataset.to_dataset(df[["timestamp", "target", "segment"]]).iloc[:-10],
+        df_exog=TSDataset.to_dataset(df_exog),
+        freq="D",
+        known_future="all",
+    )
+    return ts
+
+
+@pytest.fixture()
+def outliers_solid_tsds_for_pipeline():
+    """Create TSDataset with outliers error inside ts, incorrect type column"""
+    timestamp = pd.date_range("2021-01-01", end="2021-02-20", freq="D")
+    target1 = [np.sin(i) for i in range(len(timestamp))]
+    target1[5] += 10
+    info_col1 = [1 if np.sin(i) > 0.5 else 0 for i in range(len(timestamp))]
+
+    target2 = [np.sin(i) for i in range(len(timestamp))]
+    target2[8] += 8
+    target2[15] = 2
+    target2[26] -= 12
+    info_col2 = [1 if np.sin(i) > 0 else 0 for i in range(len(timestamp))]
+
+    df1 = pd.DataFrame({"timestamp": timestamp, "target": target1, "segment": "1", "is_holiday": info_col1})
+    df2 = pd.DataFrame({"timestamp": timestamp, "target": target2, "segment": "2", "is_holiday": info_col2})
+    df = pd.concat([df1, df2], ignore_index=True)
+    df_exog = df.copy()
+    df_exog.columns = ["timestamp", "regressor_1", "segment", "is_holiday"]
+    ts = TSDataset(
+        df=TSDataset.to_dataset(df[["timestamp", "target", "segment"]]).iloc[:-10],
+        df_exog=TSDataset.to_dataset(df_exog),
+        freq="D",
+        known_future="all",
+    )
     return ts
 
 
@@ -291,7 +354,7 @@ def test_params_to_tune(transform, outliers_solid_tsds):
     (
         MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
         DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
-        # PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
+        PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
     ),
 )
 def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
@@ -310,9 +373,55 @@ def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
         PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
     ),
 )
-def test_incorrect_formats(transform, outliers_solid_tsds):
+def test_incorrect_formats(transform, outliers_solid_tsds, outliers_solid_tsds_with_error):
+    # not exists column
     ts = outliers_solid_tsds
     assert len(transform.params_to_tune()) > 0
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='Name ignore_flag_column="is_holiday" not find.'):
         transform.fit(ts)
         _ = transform.transform(ts)
+
+    # incorrect type column
+    ts = outliers_solid_tsds_with_error
+    with pytest.raises(
+        ValueError,
+        match=re.escape("Columns ignore_flag contain non binary value: columns: \"is_holiday\" in segment: ['1', '2']"),
+    ):
+        transform.fit(ts)
+        _ = transform.transform(ts)
+
+
+@pytest.mark.parametrize(
+    "transform, expected_changes",
+    [
+        (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"), {"change": {"target"}}),
+        (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"), {"change": {"target"}}),
+        (
+            PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
+            {"change": {"target"}},
+        ),
+    ],
+)
+def test_full_pipeline(transform, expected_changes, outliers_solid_tsds_for_pipeline):
+    ts = outliers_solid_tsds_for_pipeline
+
+    train_ts = deepcopy(ts)
+    test_ts = deepcopy(ts)
+
+    transform.fit(train_ts)
+
+    transformed_test_ts = transform.transform(deepcopy(test_ts))
+
+    inverse_transformed_test_ts = transform.inverse_transform(deepcopy(transformed_test_ts))
+
+    # check
+    assert_column_changes(ts_1=transformed_test_ts, ts_2=inverse_transformed_test_ts, expected_changes=expected_changes)
+    flat_test_df = test_ts.to_pandas(flatten=True)
+    flat_transformed_test_df = transformed_test_ts.to_pandas(flatten=True)
+    flat_inverse_transformed_test_df = inverse_transformed_test_ts.to_pandas(flatten=True)
+    created_columns, removed_columns, changed_columns = find_columns_diff(
+        flat_transformed_test_df, flat_inverse_transformed_test_df
+    )
+    pd.testing.assert_frame_equal(
+        flat_test_df[list(changed_columns)], flat_inverse_transformed_test_df[list(changed_columns)]
+    )
