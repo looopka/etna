@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 - 
 - 
-- 
+- Add in `OutliersTransform` possibilities use `ignore_flag_column` to skip values use ignore ([#291](https://github.com/etna-team/etna/pull/291))
 
 ### Changed
 - 
