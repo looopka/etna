@@ -26,12 +26,13 @@ class OutliersTransform(ReversibleTransform, ABC):
         in_column:
             name of processed column
         ignore_flag_column:
-            name of column binary flag of holidays
+            column name for skipping values from outlier check
         """
+        required_features = [in_column]
         if ignore_flag_column:
-            super().__init__(required_features=[in_column, ignore_flag_column])
-        else:
-            super().__init__(required_features=[in_column])
+            required_features.append(ignore_flag_column)
+
+        super().__init__(required_features=required_features)
         self.in_column = in_column
         self.ignore_flag_column = ignore_flag_column
 
@@ -84,12 +85,17 @@ class OutliersTransform(ReversibleTransform, ABC):
         :
             The fitted transform instance.
         """
-        if self.ignore_flag_column is not None and self.ignore_flag_column not in ts.regressors:
-            raise ValueError("Name ignore_flag_column not find.")
-        if self.ignore_flag_column is not None and not all(
-            ts[:, segment, self.ignore_flag_column].isin([0, 1]).all() for segment in ts.segments
+        if (
+            self.ignore_flag_column is not None
+            and self.ignore_flag_column not in ts.columns.get_level_values(1).values.tolist()
         ):
-            raise ValueError("Columns ignore_flag contain non binary value")
+            raise ValueError(f'Name ignore_flag_column="{self.ignore_flag_column}" not find.')
+
+        s = ts[..., self.ignore_flag_column].isin([0, 1]).all(axis=0)
+        if self.ignore_flag_column is not None and not all(s):
+            raise ValueError(
+                f'Columns ignore_flag contain non binary value: columns: "{self.ignore_flag_column}" in segment: {s[~s].index.get_level_values(0).tolist()}'
+            )
         self.segment_outliers = self.detect_outliers(ts)
         self._fit_segments = ts.segments
         super().fit(ts=ts)
