@@ -85,7 +85,6 @@ class OutliersTransform(ReversibleTransform, ABC):
         :
             The fitted transform instance.
         """
-
         if self.ignore_flag_column is not None:
             if self.ignore_flag_column not in ts.columns.get_level_values(1).values.tolist():
                 raise ValueError(f'Name ignore_flag_column="{self.ignore_flag_column}" not find.')
