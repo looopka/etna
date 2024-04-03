@@ -51,7 +51,7 @@ class MedianOutliersTransform(OutliersTransform):
         alpha:
             coefficient for determining the threshold
         ignore_flag_column:
-            name of column binary flag of holidays
+            column name for skipping values from outlier check
         """
         self.window_size = window_size
         self.alpha = alpha
@@ -123,6 +123,8 @@ class DensityOutliersTransform(OutliersTransform):
         distance_func:
             distance function. If a string is specified, a corresponding vectorized implementation will be used.
             Custom callable will be used as a scalar function, which will result in worse performance.
+        ignore_flag_column:
+            column name for skipping values from outlier check
         """
         self.window_size = window_size
         self.distance_coef = distance_coef
@@ -193,7 +195,7 @@ class PredictionIntervalOutliersTransform(OutliersTransform):
         interval_width:
             width of the prediction interval
         ignore_flag_column:
-            name of column binary flag of holidays
+            column name for skipping values from outlier check
         Notes
         -----
         For not "target" column only column data will be used for learning.
