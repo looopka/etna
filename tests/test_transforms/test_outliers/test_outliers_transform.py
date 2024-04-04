@@ -9,8 +9,10 @@ from etna.analysis import get_anomalies_density
 from etna.analysis import get_anomalies_median
 from etna.analysis import get_anomalies_prediction_interval
 from etna.datasets.tsdataset import TSDataset
+from etna.models import NaiveModel
 from etna.models import ProphetModel
 from etna.models import SARIMAXModel
+from etna.pipeline import Pipeline
 from etna.transforms import DensityOutliersTransform
 from etna.transforms import HolidayTransform
 from etna.transforms import MedianOutliersTransform
@@ -391,7 +393,7 @@ def test_incorrect_type_ignore_flag(transform, outliers_solid_tsds_with_error):
         ),
     ],
 )
-def test_full_pipeline(transform, expected_changes, outliers_solid_tsds_for_pipeline):
+def test_full_train_with_outliner(transform, expected_changes, outliers_solid_tsds_for_pipeline):
     ts = outliers_solid_tsds_for_pipeline
 
     train_ts = deepcopy(ts)
@@ -414,3 +416,17 @@ def test_full_pipeline(transform, expected_changes, outliers_solid_tsds_for_pipe
     pd.testing.assert_frame_equal(
         flat_test_df[list(changed_columns)], flat_inverse_transformed_test_df[list(changed_columns)]
     )
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
+        (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
+        (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
+    ],
+)
+def test_full_pipeline(transform):
+    model = NaiveModel(lag=1)
+    pipeline = Pipeline(model, transforms=[transform], horizon=3)
+    pipeline.set_params(**{"model.lag": 3})
