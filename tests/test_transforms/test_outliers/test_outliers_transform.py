@@ -365,10 +365,9 @@ def test_incorrect_not_exists_column(transform, outliers_solid_tsds):
 @pytest.mark.parametrize(
     "transform",
     (
-            MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
-            DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
-            PredictionIntervalOutliersTransform(in_column="target", model="sarimax",
-                                                ignore_flag_column="is_holiday"),
+        MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
+        DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
+        PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
     ),
 )
 def test_incorrect_type_ignore_flag(transform, outliers_solid_tsds_with_error):
