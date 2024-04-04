@@ -362,7 +362,7 @@ def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
     assert len(transform.params_to_tune()) > 0
     transform.fit(ts)
     ts_output = transform.transform(ts)
-    assert ts_output["2021-01-06":"2021-01-06", "1", "target"][0] != np.nan
+    assert not all(ts_output["2021-01-06":"2021-01-06", "1", "target"].isna())
 
 
 @pytest.mark.parametrize(
