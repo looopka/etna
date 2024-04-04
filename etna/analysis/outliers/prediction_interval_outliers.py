@@ -59,7 +59,7 @@ def _select_segments_subset(ts: TSDataset, segments: List[str]) -> TSDataset:
     freq = ts.freq
 
     if df_exog is not None:
-        df = df.drop(df_exog.columns.get_level_values(1).values.tolist(), axis=1, level=1)
+        df = df.drop(df_exog.columns.get_level_values("feature").values.tolist(), axis=1, level=1)
 
     subset_ts = TSDataset(df=df, df_exog=df_exog, known_future=known_future, freq=freq)
     return subset_ts
