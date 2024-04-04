@@ -373,15 +373,24 @@ def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
         PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
     ),
 )
-def test_incorrect_formats(transform, outliers_solid_tsds, outliers_solid_tsds_with_error):
-    # not exists column
+def test_incorrect_not_exists_column(transform, outliers_solid_tsds):
     ts = outliers_solid_tsds
     assert len(transform.params_to_tune()) > 0
     with pytest.raises(ValueError, match='Name ignore_flag_column="is_holiday" not find.'):
         transform.fit(ts)
         _ = transform.transform(ts)
 
-    # incorrect type column
+
+@pytest.mark.parametrize(
+    "transform",
+    (
+            MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
+            DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
+            PredictionIntervalOutliersTransform(in_column="target", model="sarimax",
+                                                ignore_flag_column="is_holiday"),
+    ),
+)
+def test_incorrect_type_ignore_flag(transform, outliers_solid_tsds_with_error):
     ts = outliers_solid_tsds_with_error
     with pytest.raises(
         ValueError,
