@@ -397,21 +397,9 @@ def test_full_train_with_outliers(transform, expected_changes, outliers_solid_ts
         (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
     ],
 )
-def test_full_pipeline(transform):
-    model = NaiveModel(lag=1)
-    pipeline = Pipeline(model, transforms=[transform], horizon=3)
-    pipeline.set_params(**{"model.lag": 3})
+def test_full_pipeline(transform, outliers_solid_tsds):
+    ts = outliers_solid_tsds
 
-
-@pytest.mark.parametrize(
-    "transform",
-    [
-        (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
-        (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
-        (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
-    ],
-)
-def test_ignore_column_different_initialized(transform):
-    model = NaiveModel(lag=1)
-    pipeline = Pipeline(model, transforms=[transform], horizon=3)
-    pipeline.set_params(**{"model.lag": 3})
+    holiday_transform = HolidayTransform(iso_code="RUS", mode="binary", out_column="is_holiday")
+    pipeline = Pipeline(NaiveModel(lag=1), transforms=[holiday_transform, transform], horizon=3)
+    pipeline.fit(ts)
