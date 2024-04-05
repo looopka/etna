@@ -98,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 - 
 - 
-- Fix `PredictionIntervalOutliersTransform` fails to work with created columns
+- Fix `PredictionIntervalOutliersTransform` fails to work with created columns ([#293](https://github.com/etna-team/etna/issues/293))
 - Prohibit empty list value and duplication of `target_timestamps` parameter in `FoldMask` ([#226](https://github.com/etna-team/etna/pull/226))
 - 
 - 
