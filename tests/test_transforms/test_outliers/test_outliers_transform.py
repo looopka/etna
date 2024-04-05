@@ -60,7 +60,7 @@ def outliers_solid_tsds_with_holidays(outliers_solid_tsds):
 
 
 @pytest.fixture()
-def outliers_solid_tsds_with_error():
+def outliers_solid_tsds_with_error(outliers_solid_tsds):
     """Create TSDataset with outliers error inside ts, incorrect type column"""
     ts = outliers_solid_tsds
 
@@ -69,6 +69,21 @@ def outliers_solid_tsds_with_error():
     info_col1[9] = 4
     info_col2 = [1 if np.sin(i) > 0 else 0 for i in range(len(timestamp))]
     info_col2[10] = 14
+
+    ts.add_columns_from_pandas(TSDataset.to_dataset(
+        pd.DataFrame({
+            "is_holiday": info_col1,
+            "timestamp": timestamp,
+            "segment": 1
+        })
+    ))
+    ts.add_columns_from_pandas(TSDataset.to_dataset(
+        pd.DataFrame({
+            "is_holiday": info_col2,
+            "timestamp": timestamp,
+            "segment": 2
+        })
+    ))
 
     return ts
 
