@@ -24,6 +24,31 @@ from tests.test_transforms.utils import find_columns_diff
 from tests.utils import select_segments_subset
 
 
+def insert_column(ts, info_col, timestamp, segment):
+    return ts.add_columns_from_pandas(TSDataset.to_dataset(
+        pd.DataFrame({
+            "is_holiday": info_col,
+            "timestamp": timestamp,
+            "segment": segment,
+        })
+    ))
+
+
+def made_specific_ds(ts, add_error=True):
+    timestamp = pd.date_range("2021-01-01", end="2021-02-20", freq="D")
+    info_col1 = [1 if np.sin(i) > 0.5 else 0 for i in range(len(timestamp))]
+    info_col2 = [1 if np.sin(i) > 0 else 0 for i in range(len(timestamp))]
+
+    if add_error:
+        info_col1[9] = 4
+        info_col2[10] = 14
+
+    insert_column(ts, info_col1, timestamp, 1)
+    insert_column(ts, info_col2, timestamp, 2)
+
+    return ts
+
+
 @pytest.fixture()
 def outliers_solid_tsds():
     """Create TSDataset with outliers and same last date."""
@@ -62,30 +87,13 @@ def outliers_solid_tsds_with_holidays(outliers_solid_tsds):
 @pytest.fixture()
 def outliers_solid_tsds_with_error(outliers_solid_tsds):
     """Create TSDataset with outliers error inside ts, incorrect type column"""
-    ts = outliers_solid_tsds
+    return made_specific_ds(outliers_solid_tsds, add_error=True)
 
-    timestamp = pd.date_range("2021-01-01", end="2021-02-20", freq="D")
-    info_col1 = [1 if np.sin(i) > 0.5 else 0 for i in range(len(timestamp))]
-    info_col1[9] = 4
-    info_col2 = [1 if np.sin(i) > 0 else 0 for i in range(len(timestamp))]
-    info_col2[10] = 14
 
-    ts.add_columns_from_pandas(TSDataset.to_dataset(
-        pd.DataFrame({
-            "is_holiday": info_col1,
-            "timestamp": timestamp,
-            "segment": 1
-        })
-    ))
-    ts.add_columns_from_pandas(TSDataset.to_dataset(
-        pd.DataFrame({
-            "is_holiday": info_col2,
-            "timestamp": timestamp,
-            "segment": 2
-        })
-    ))
-
-    return ts
+@pytest.fixture()
+def outliers_solid_tsds_non_regressor_holiday(outliers_solid_tsds):
+    """Create TSDataset with outliers inside ts non regressor"""
+    return made_specific_ds(outliers_solid_tsds, add_error=False)
 
 
 @pytest.mark.parametrize("attribute_name,value_type", (("outliers_timestamps", list), ("original_values", pd.Series)))
@@ -316,7 +324,7 @@ def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
     assert len(transform.params_to_tune()) > 0
     transform.fit(ts)
     ts_output = transform.transform(ts)
-    assert not all(ts_output["2021-01-06":"2021-01-06", "1", "target"].isna())
+    assert not any(ts_output["2021-01-06":"2021-01-06", "1", "target"].isna())
 
 
 @pytest.mark.parametrize(
