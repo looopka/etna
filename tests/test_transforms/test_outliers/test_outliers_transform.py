@@ -62,58 +62,14 @@ def outliers_solid_tsds_with_holidays(outliers_solid_tsds):
 @pytest.fixture()
 def outliers_solid_tsds_with_error():
     """Create TSDataset with outliers error inside ts, incorrect type column"""
+    ts = outliers_solid_tsds
+
     timestamp = pd.date_range("2021-01-01", end="2021-02-20", freq="D")
-    target1 = [np.sin(i) for i in range(len(timestamp))]
-    target1[5] += 10
     info_col1 = [1 if np.sin(i) > 0.5 else 0 for i in range(len(timestamp))]
     info_col1[9] = 4
-
-    target2 = [np.sin(i) for i in range(len(timestamp))]
-    target2[8] += 8
-    target2[15] = 2
-    target2[26] -= 12
     info_col2 = [1 if np.sin(i) > 0 else 0 for i in range(len(timestamp))]
     info_col2[10] = 14
 
-    df1 = pd.DataFrame({"timestamp": timestamp, "target": target1, "segment": "1", "is_holiday": info_col1})
-    df2 = pd.DataFrame({"timestamp": timestamp, "target": target2, "segment": "2", "is_holiday": info_col2})
-    df = pd.concat([df1, df2], ignore_index=True)
-    df_exog = df.copy()
-    df_exog.columns = ["timestamp", "regressor_1", "segment", "is_holiday"]
-    ts = TSDataset(
-        df=TSDataset.to_dataset(df[["timestamp", "target", "segment"]]).iloc[:-10],
-        df_exog=TSDataset.to_dataset(df_exog),
-        freq="D",
-        known_future="all",
-    )
-    return ts
-
-
-@pytest.fixture()
-def outliers_solid_tsds_for_pipeline():
-    """Create TSDataset with outliers error inside ts, incorrect type column"""
-    timestamp = pd.date_range("2021-01-01", end="2021-02-20", freq="D")
-    target1 = [np.sin(i) for i in range(len(timestamp))]
-    target1[5] += 10
-    info_col1 = [1 if np.sin(i) > 0.5 else 0 for i in range(len(timestamp))]
-
-    target2 = [np.sin(i) for i in range(len(timestamp))]
-    target2[8] += 8
-    target2[15] = 2
-    target2[26] -= 12
-    info_col2 = [1 if np.sin(i) > 0 else 0 for i in range(len(timestamp))]
-
-    df1 = pd.DataFrame({"timestamp": timestamp, "target": target1, "segment": "1", "is_holiday": info_col1})
-    df2 = pd.DataFrame({"timestamp": timestamp, "target": target2, "segment": "2", "is_holiday": info_col2})
-    df = pd.concat([df1, df2], ignore_index=True)
-    df_exog = df.copy()
-    df_exog.columns = ["timestamp", "regressor_1", "segment", "is_holiday"]
-    ts = TSDataset(
-        df=TSDataset.to_dataset(df[["timestamp", "target", "segment"]]).iloc[:-10],
-        df_exog=TSDataset.to_dataset(df_exog),
-        freq="D",
-        known_future="all",
-    )
     return ts
 
 
@@ -393,8 +349,8 @@ def test_incorrect_type_ignore_flag(transform, outliers_solid_tsds_with_error):
         ),
     ],
 )
-def test_full_train_with_outliers(transform, expected_changes, outliers_solid_tsds_for_pipeline):
-    ts = outliers_solid_tsds_for_pipeline
+def test_full_train_with_outliers(transform, expected_changes, outliers_solid_tsds_with_holidays):
+    ts = outliers_solid_tsds_with_holidays
 
     train_ts = deepcopy(ts)
     test_ts = deepcopy(ts)
@@ -427,6 +383,20 @@ def test_full_train_with_outliers(transform, expected_changes, outliers_solid_ts
     ],
 )
 def test_full_pipeline(transform):
+    model = NaiveModel(lag=1)
+    pipeline = Pipeline(model, transforms=[transform], horizon=3)
+    pipeline.set_params(**{"model.lag": 3})
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
+        (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
+        (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
+    ],
+)
+def test_ignore_column_different_initialized(transform):
     model = NaiveModel(lag=1)
     pipeline = Pipeline(model, transforms=[transform], horizon=3)
     pipeline.set_params(**{"model.lag": 3})
