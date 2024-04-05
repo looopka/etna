@@ -393,7 +393,7 @@ def test_incorrect_type_ignore_flag(transform, outliers_solid_tsds_with_error):
         ),
     ],
 )
-def test_full_train_with_outliner(transform, expected_changes, outliers_solid_tsds_for_pipeline):
+def test_full_train_with_outliers(transform, expected_changes, outliers_solid_tsds_for_pipeline):
     ts = outliers_solid_tsds_for_pipeline
 
     train_ts = deepcopy(ts)
