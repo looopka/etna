@@ -43,8 +43,8 @@ def made_specific_ds(ts, add_error=True):
         info_col1[9] = 4
         info_col2[10] = 14
 
-    insert_column(ts, info_col1, timestamp, 1)
-    insert_column(ts, info_col2, timestamp, 2)
+    insert_column(ts, info_col1, timestamp, "1")
+    insert_column(ts, info_col2, timestamp, "2")
 
     return ts
 
@@ -411,3 +411,33 @@ def test_full_pipeline(transform, outliers_solid_tsds):
     holiday_transform = HolidayTransform(iso_code="RUS", mode="binary", out_column="is_holiday")
     pipeline = Pipeline(NaiveModel(lag=1), transforms=[holiday_transform, transform], horizon=3)
     pipeline.fit(ts)
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
+        (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
+        (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
+    ],
+)
+def test_advance_usage_data_in_transform_regressor(transform, outliers_solid_tsds_with_holidays):
+    ts = outliers_solid_tsds_with_holidays
+    assert len(transform.params_to_tune()) > 0
+    transform.fit(ts)
+    _ = transform.transform(ts)
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
+        (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
+        (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
+    ],
+)
+def test_advance_usage_data_in_transform_nonregressor(transform, outliers_solid_tsds_non_regressor_holiday):
+    ts = outliers_solid_tsds_non_regressor_holiday
+    assert len(transform.params_to_tune()) > 0
+    transform.fit(ts)
+    _ = transform.transform(ts)
