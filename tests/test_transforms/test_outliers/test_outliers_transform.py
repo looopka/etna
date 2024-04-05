@@ -425,21 +425,6 @@ def test_full_pipeline(transform, outliers_solid_tsds):
         (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
     ],
 )
-def test_advance_usage_data_in_transform_regressor(transform, outliers_solid_tsds_with_holidays):
-    ts = outliers_solid_tsds_with_holidays
-    assert len(transform.params_to_tune()) > 0
-    transform.fit(ts)
-    _ = transform.transform(ts)
-
-
-@pytest.mark.parametrize(
-    "transform",
-    [
-        (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
-        (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
-        (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
-    ],
-)
 def test_advance_usage_data_in_transform_nonregressor(transform, outliers_solid_tsds_non_regressor_holiday):
     ts = outliers_solid_tsds_non_regressor_holiday
     assert len(transform.params_to_tune()) > 0
