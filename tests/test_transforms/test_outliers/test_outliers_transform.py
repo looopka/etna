@@ -25,13 +25,17 @@ from tests.utils import select_segments_subset
 
 
 def insert_column(ts, info_col, timestamp, segment):
-    return ts.add_columns_from_pandas(TSDataset.to_dataset(
-        pd.DataFrame({
-            "is_holiday": info_col,
-            "timestamp": timestamp,
-            "segment": segment,
-        })
-    ))
+    return ts.add_columns_from_pandas(
+        TSDataset.to_dataset(
+            pd.DataFrame(
+                {
+                    "is_holiday": info_col,
+                    "timestamp": timestamp,
+                    "segment": segment,
+                }
+            )
+        )
+    )
 
 
 def made_specific_ds(ts, add_error=True):
