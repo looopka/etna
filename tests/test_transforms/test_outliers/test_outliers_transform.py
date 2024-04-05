@@ -325,7 +325,6 @@ def test_params_to_tune(transform, outliers_solid_tsds):
 )
 def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
     ts = outliers_solid_tsds_with_holidays
-    assert len(transform.params_to_tune()) > 0
     transform.fit(ts)
     ts_output = transform.transform(ts)
     assert not any(ts_output["2021-01-06":"2021-01-06", "1", "target"].isna())
@@ -341,7 +340,6 @@ def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
 )
 def test_incorrect_not_exists_column(transform, outliers_solid_tsds):
     ts = outliers_solid_tsds
-    assert len(transform.params_to_tune()) > 0
     with pytest.raises(ValueError, match='Name ignore_flag_column="is_holiday" not find.'):
         transform.fit(ts)
         _ = transform.transform(ts)
@@ -427,6 +425,5 @@ def test_full_pipeline(transform, outliers_solid_tsds):
 )
 def test_advance_usage_data_in_transform_nonregressor(transform, outliers_solid_tsds_non_regressor_holiday):
     ts = outliers_solid_tsds_non_regressor_holiday
-    assert len(transform.params_to_tune()) > 0
     transform.fit(ts)
     _ = transform.transform(ts)
