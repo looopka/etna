@@ -4,6 +4,7 @@ from typing import Optional
 from typing import cast
 
 import holidays
+import numpy as np
 import pandas as pd
 from pandas.tseries.offsets import MonthBegin
 from pandas.tseries.offsets import MonthEnd
@@ -15,6 +16,7 @@ from pandas.tseries.offsets import YearEnd
 from typing_extensions import assert_never
 
 from etna.datasets import TSDataset
+from etna.datasets import duplicate_data
 from etna.datasets.utils import determine_freq
 from etna.transforms.base import IrreversibleTransform
 
@@ -247,19 +249,22 @@ class HolidayTransform(IrreversibleTransform):
         return self
 
     def _compute_feature(self, timestamps: pd.Series) -> pd.Series:
+        dtype = "float"
+        if self._mode is HolidayTransformMode.binary or self._mode is HolidayTransformMode.category:
+            dtype = "category"
+
         if self._mode is HolidayTransformMode.days_count:
             date_offset = pd.tseries.frequencies.to_offset(self._freq)
             values = []
             for dt in timestamps:
                 if dt is pd.NaT:
-                    values.append(pd.NA)
+                    values.append(np.NAN)
                 else:
                     start_date, end_date = define_period(date_offset, pd.Timestamp(dt), self._freq)
                     date_range = pd.date_range(start=start_date, end=end_date, freq="D")
                     count_holidays = sum(1 for d in date_range if d in self.holidays)
                     holidays_freq = count_holidays / date_range.size
                     values.append(holidays_freq)
-            result = pd.Series(values)
         elif self._mode is HolidayTransformMode.category:
             values = []
             for t in timestamps:
@@ -268,12 +273,12 @@ class HolidayTransform(IrreversibleTransform):
                 elif t in self.holidays:
                     values.append(self.holidays[t])
                 else:
-                    values.append(self._no_holiday_name)
-            result = pd.Series(values)
+                    values.append(self._no_holiday_name)  # type: ignore
         elif self._mode is HolidayTransformMode.binary:
-            result = pd.Series([int(x in self.holidays) if x is not pd.NaT else pd.NA for x in timestamps])
+            values = [int(x in self.holidays) if x is not pd.NaT else pd.NA for x in timestamps]
         else:
             assert_never(self._mode)
+        result = pd.Series(values, index=timestamps, dtype=dtype, name=self._get_column_name())
 
         return result
 
@@ -314,23 +319,15 @@ class HolidayTransform(IrreversibleTransform):
             if pd.api.types.is_integer_dtype(df.index.dtype):
                 raise ValueError("Transform can't work with integer index, parameter in_column should be set!")
 
-            feature = self._compute_feature(timestamps=df.index).values
-            cols = df.columns.get_level_values("segment").unique()
-            encoded_matrix = feature.reshape(-1, 1).repeat(len(cols), axis=1)
-            wide_df = pd.DataFrame(
-                encoded_matrix,
-                columns=pd.MultiIndex.from_product([cols, [out_column]], names=("segment", "feature")),
-                index=df.index,
-            )
+            feature = self._compute_feature(timestamps=df.index)
+            segments = df.columns.get_level_values("segment").unique().tolist()
+            wide_df = duplicate_data(df=feature.reset_index(), segments=segments)
         else:
             self._validate_external_timestamps(df=df)
             features = TSDataset.to_flatten(df=df, features=[self.in_column])
-            features[out_column] = self._compute_feature(timestamps=features[self.in_column])
+            features[out_column] = self._compute_feature(timestamps=features[self.in_column]).values
             features.drop(columns=[self.in_column], inplace=True)
             wide_df = TSDataset.to_dataset(features)
-
-        if self._mode is HolidayTransformMode.binary or self._mode is HolidayTransformMode.category:
-            wide_df = wide_df.astype("category")
 
         df = pd.concat([df, wide_df], axis=1).sort_index(axis=1)
         return df
