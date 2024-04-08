@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Add `BinaryOperationTransform` to transforms ([#260](https://github.com/etna-team/etna/pull/260))
-- 
+- Add `TFTNativeModel` ([#290](https://github.com/etna-team/etna/pull/290))
 - 
 - 
 - 
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 - 
 - 
-- 
+- Add tutorial about working with misaligned data ([#288](https://github.com/etna-team/etna/pull/288))
 - 
 - 
 - 
@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 - 
 - 
-- 
+- Update glossary with terms related to working with misaligned data ([#288](https://github.com/etna-team/etna/pull/288))
 - 
 - Add ignoring of integer timestamp as a feature into native DL models ([#210](https://github.com/etna-team/etna/pull/210))
 - Update `pytorch_forecasting` models to handle integer timestamp ([#208](https://github.com/etna-team/etna/pull/208))
@@ -80,7 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update CLI to handle integer timestamp ([#246](https://github.com/etna-team/etna/pull/246))
 - Update `ExogShiftTransform` to handle integer timestamp ([#254](https://github.com/etna-team/etna/pull/254))
 - Extend base `TSDataset` constructor to handle long format dataframes, update documentation and tutorials with this change ([#266](https://github.com/etna-team/etna/pull/266))
-- 
+- Update internal datasets to work with unaligned data ([#292](https://github.com/etna-team/etna/pull/292))
 - 
 - 
 - 
@@ -107,7 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix indexing in `stl_plot`, `plot_periodogram`, `plot_holidays`, `plot_backtest`, `plot_backtest_interactive`, `ResampleWithDistributionTransform` ([#244](https://github.com/etna-team/etna/pull/244))
 - Fix `DifferencingTransform` to handle integer timestamp on test ([#244](https://github.com/etna-team/etna/pull/244))
 - 
-- 
+- Fix `HolidayTransform` to handle integer timestamp in `days_count` mode ([#285](https://github.com/etna-team/etna/pull/285))
 - 
 - 
 - 
