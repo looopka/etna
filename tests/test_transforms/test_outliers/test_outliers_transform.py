@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from etna.analysis import get_anomalies_density
+from etna.analysis import get_anomalies_isolation_forest
 from etna.analysis import get_anomalies_median
 from etna.analysis import get_anomalies_prediction_interval
 from etna.datasets.tsdataset import TSDataset
@@ -13,10 +14,14 @@ from etna.models import NaiveModel
 from etna.models import ProphetModel
 from etna.models import SARIMAXModel
 from etna.pipeline import Pipeline
+from etna.transforms import DateFlagsTransform
 from etna.transforms import DensityOutliersTransform
+from etna.transforms import FourierTransform
 from etna.transforms import HolidayTransform
+from etna.transforms import LagTransform
 from etna.transforms import MedianOutliersTransform
 from etna.transforms import PredictionIntervalOutliersTransform
+from etna.transforms.outliers import IForestOutlierTransform
 from tests.test_transforms.utils import assert_column_changes
 from tests.test_transforms.utils import assert_sampling_is_valid
 from tests.test_transforms.utils import assert_transformation_equals_loaded_original
@@ -121,6 +126,7 @@ def test_density_outliers_deprecated_store_attributes(outliers_solid_tsds, attri
         (MedianOutliersTransform, {}),
         (DensityOutliersTransform, {}),
         (PredictionIntervalOutliersTransform, dict(model=ProphetModel)),
+        (IForestOutlierTransform, {}),
     ],
 )
 def test_interface(transform_constructor, constructor_kwargs, outliers_solid_tsds: TSDataset, in_column):
@@ -142,6 +148,12 @@ def test_interface(transform_constructor, constructor_kwargs, outliers_solid_tsd
             dict(model=ProphetModel),
             get_anomalies_prediction_interval,
             dict(model=ProphetModel),
+        ),
+        (
+            IForestOutlierTransform,
+            {"ignore_missing": True, "random_state": 42},
+            get_anomalies_isolation_forest,
+            {"ignore_missing": True, "random_state": 42},
         ),
     ],
 )
@@ -169,6 +181,7 @@ def test_outliers_detection(transform_constructor, constructor_kwargs, method, o
         (MedianOutliersTransform, {}),
         (DensityOutliersTransform, {}),
         (PredictionIntervalOutliersTransform, dict(model=ProphetModel)),
+        (IForestOutlierTransform, {}),
     ],
 )
 def test_inverse_transform_train(transform_constructor, constructor_kwargs, outliers_solid_tsds, in_column):
@@ -188,6 +201,7 @@ def test_inverse_transform_train(transform_constructor, constructor_kwargs, outl
         (MedianOutliersTransform, {}),
         (DensityOutliersTransform, {}),
         (PredictionIntervalOutliersTransform, dict(model=ProphetModel)),
+        (IForestOutlierTransform, {}),
     ],
 )
 def test_inverse_transform_future(transform_constructor, constructor_kwargs, outliers_solid_tsds, in_column):
@@ -207,6 +221,7 @@ def test_inverse_transform_future(transform_constructor, constructor_kwargs, out
         MedianOutliersTransform(in_column="target"),
         DensityOutliersTransform(in_column="target"),
         PredictionIntervalOutliersTransform(in_column="target", model=ProphetModel),
+        IForestOutlierTransform(in_column="target"),
     ),
 )
 def test_transform_raise_error_if_not_fitted(transform, outliers_solid_tsds):
@@ -221,6 +236,7 @@ def test_transform_raise_error_if_not_fitted(transform, outliers_solid_tsds):
         MedianOutliersTransform(in_column="target"),
         DensityOutliersTransform(in_column="target"),
         PredictionIntervalOutliersTransform(in_column="target", model=ProphetModel),
+        IForestOutlierTransform(in_column="target"),
     ),
 )
 def test_inverse_transform_raise_error_if_not_fitted(transform, outliers_solid_tsds):
@@ -235,6 +251,7 @@ def test_inverse_transform_raise_error_if_not_fitted(transform, outliers_solid_t
         MedianOutliersTransform(in_column="target"),
         DensityOutliersTransform(in_column="target"),
         PredictionIntervalOutliersTransform(in_column="target", model=ProphetModel),
+        IForestOutlierTransform(in_column="target"),
     ),
 )
 def test_transform_new_segments_fail(transform, outliers_solid_tsds):
@@ -254,6 +271,7 @@ def test_transform_new_segments_fail(transform, outliers_solid_tsds):
         MedianOutliersTransform(in_column="target"),
         DensityOutliersTransform(in_column="target"),
         PredictionIntervalOutliersTransform(in_column="target", model=ProphetModel),
+        IForestOutlierTransform(in_column="target"),
     ),
 )
 def test_inverse_transform_new_segments_fail(transform, outliers_solid_tsds):
@@ -273,6 +291,7 @@ def test_inverse_transform_new_segments_fail(transform, outliers_solid_tsds):
         MedianOutliersTransform(in_column="target"),
         DensityOutliersTransform(in_column="target"),
         PredictionIntervalOutliersTransform(in_column="target", model=ProphetModel),
+        IForestOutlierTransform(in_column="target", ignore_missing=True),
     ),
 )
 def test_fit_transform_with_nans(transform, ts_diff_endings):
@@ -284,6 +303,7 @@ def test_fit_transform_with_nans(transform, ts_diff_endings):
     (
         MedianOutliersTransform(in_column="target"),
         DensityOutliersTransform(in_column="target"),
+        IForestOutlierTransform(in_column="target"),
     ),
 )
 def test_save_load(transform, outliers_solid_tsds):
@@ -307,6 +327,7 @@ def test_save_load_prediction_interval(transform, outliers_solid_tsds):
         MedianOutliersTransform(in_column="target"),
         DensityOutliersTransform(in_column="target"),
         PredictionIntervalOutliersTransform(in_column="target", model="sarimax"),
+        IForestOutlierTransform(in_column="target"),
     ),
 )
 def test_params_to_tune(transform, outliers_solid_tsds):
@@ -321,6 +342,7 @@ def test_params_to_tune(transform, outliers_solid_tsds):
         MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
         DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
         PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
+        IForestOutlierTransform(in_column="target", ignore_flag_column="is_holiday"),
     ),
 )
 def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
@@ -336,6 +358,7 @@ def test_correct_ignore_flag(transform, outliers_solid_tsds_with_holidays):
         MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
         DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
         PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
+        IForestOutlierTransform(in_column="target", ignore_flag_column="is_holiday"),
     ),
 )
 def test_incorrect_not_exists_column(transform, outliers_solid_tsds):
@@ -351,6 +374,7 @@ def test_incorrect_not_exists_column(transform, outliers_solid_tsds):
         MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
         DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday"),
         PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
+        IForestOutlierTransform(in_column="target", ignore_flag_column="is_holiday"),
     ),
 )
 def test_incorrect_type_ignore_flag(transform, outliers_solid_tsds_with_error):
@@ -372,6 +396,7 @@ def test_incorrect_type_ignore_flag(transform, outliers_solid_tsds_with_error):
             PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday"),
             {"change": {"target"}},
         ),
+        (IForestOutlierTransform(in_column="target", ignore_flag_column="is_holiday"), {"change": {"target"}}),
     ],
 )
 def test_full_train_with_outliers(transform, expected_changes, outliers_solid_tsds_with_holidays):
@@ -405,6 +430,7 @@ def test_full_train_with_outliers(transform, expected_changes, outliers_solid_ts
         (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
         (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
         (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
+        (IForestOutlierTransform(in_column="target", ignore_flag_column="is_holiday")),
     ],
 )
 def test_full_pipeline(transform, outliers_solid_tsds):
@@ -421,9 +447,29 @@ def test_full_pipeline(transform, outliers_solid_tsds):
         (MedianOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
         (DensityOutliersTransform(in_column="target", ignore_flag_column="is_holiday")),
         (PredictionIntervalOutliersTransform(in_column="target", model="sarimax", ignore_flag_column="is_holiday")),
+        (IForestOutlierTransform(in_column="target", ignore_flag_column="is_holiday")),
     ],
 )
 def test_advance_usage_data_in_transform_nonregressor(transform, outliers_solid_tsds_non_regressor_holiday):
     ts = outliers_solid_tsds_non_regressor_holiday
     transform.fit(ts)
     _ = transform.transform(ts)
+
+
+@pytest.mark.parametrize(
+    "features",
+    [
+        (
+            [
+                HolidayTransform(iso_code="RUS", mode="binary", out_column="is_holiday"),
+                LagTransform(in_column="target", lags=[7, 8, 9], out_column="lag"),
+            ]
+        ),
+        ([DateFlagsTransform(out_column="df"), FourierTransform(period=30, order=4, out_column="fourier")]),
+    ],
+)
+def test_isolation_forest_with_features_from_transforms(outliers_solid_tsds, features):
+    ts = outliers_solid_tsds
+    anomaly_detection = IForestOutlierTransform(in_column="target")
+    pipeline = Pipeline(NaiveModel(lag=1), transforms=features + [anomaly_detection], horizon=3)
+    pipeline.fit(ts)
